@@ -700,7 +700,7 @@ class IVAE(MyDataset,IVAE_ARCH):
       with torch.no_grad():
         x0=miu_last[start_id]
         x1=miu_last[end_id]
-        line = self.sample_data_on_a_line(x0,x1,number_of_images)
+        line = self.sample_data_on_a_line(x0,x1,number_of_images).to(device)
         if (flat):
           line_decoded = np.fliplr(((model.decoder(line).cpu().detach().numpy())))
         else:
