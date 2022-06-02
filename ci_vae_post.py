@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 import sklearn
 
-df_XY=pd.read_csv("sc_counts_filtered_final.csv")
+df_XY=pd.read_csv("sc_counts_final_small.csv")
 
 ##############################################################   
 labels1=df_XY['Y'].tolist()
@@ -29,7 +29,7 @@ save_address1="./"
 
 obj1=ivae.IVAE(df_XY=df_XY,
                reconst_coef=100,
-               latent_size=30,
+               latent_size=10,
                kl_coef=0.0001*512,
                classifier_coef=10,
                test_ratio=1)

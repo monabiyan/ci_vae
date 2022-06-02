@@ -11,7 +11,7 @@ print("start of the code")
 import ivae
 
 import pandas as pd
-df_XY=pd.read_csv("sc_counts_filtered_final_small.csv")
+df_XY=pd.read_csv("sc_counts_final_small.csv")
 ##############################################################   
 labels1=df_XY['Y'].tolist()
 labels2=df_XY['YY'].tolist()
@@ -37,7 +37,7 @@ save_address="bb"
 
 obj1=ivae.IVAE(df_XY=df_XY,
                reconst_coef=10000000,
-               latent_size=30,
+               latent_size=10,
                kl_coef=0.001*512,
                classifier_coef=500,
                test_ratio=1)
