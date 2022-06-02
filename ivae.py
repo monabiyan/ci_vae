@@ -685,7 +685,7 @@ class IVAE(MyDataset,IVAE_ARCH):
 #############################################################    
     # Simply traverse between two end points and create some equally spaced points on the line.
     def sample_data_on_a_line(self,x0,x1,number_of_images):
-      space_dim=20
+      space_dim=self.latent_size
       line_distance=x1-x0
       n=number_of_images
       delta=line_distance/n
