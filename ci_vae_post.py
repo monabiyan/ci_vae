@@ -67,9 +67,9 @@ def mean_traversal(cell_type_id):
     #healthy = [i for i, x in enumerate(YY) if x == 0]
     #cancer = [i for i, x in enumerate(YY) if x == 10]
     print(len(healthy),len(cancer))
-    h_max=min(50,len(healthy))
-    c_max=min(50,len(cancer))
-    traversal_step=100
+    h_max=min(1000,len(healthy))
+    c_max=min(1000,len(cancer))
+    traversal_step=20
     line_decoded=np.zeros(shape=(traversal_step, df_XY.shape[1]-1,h_max*c_max))
     index=0
     
