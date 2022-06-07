@@ -15,7 +15,7 @@ df_XY=pd.read_csv("sc_counts_final_small.csv")
 ##############################################################   
 labels1=df_XY['Y'].tolist()
 labels2=df_XY['YY'].tolist()
-df_XY=df_XY/100000
+df_XY=df_XY
 df_XY['Y']=labels1
 df_XY=df_XY.drop(columns=['YY'])
 df_XY.shape
@@ -36,10 +36,10 @@ save_address="bb"
 
 
 obj1=ivae.IVAE(df_XY=df_XY,
-               reconst_coef=10000000,
+               reconst_coef=1000000,
                latent_size=10,
-               kl_coef=0.001*512,
-               classifier_coef=500,
+               kl_coef=0.0001*512,
+               classifier_coef=10,
                test_ratio=1)
 
 

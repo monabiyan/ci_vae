@@ -10,7 +10,7 @@ df_XY=pd.read_csv("sc_counts_final_small.csv")
 ##############################################################   
 labels1=df_XY['Y'].tolist()
 labels2=df_XY['YY'].tolist()
-df_XY=df_XY/100000
+#df_XY=df_XY/100000
 df_XY['Y']=labels1
 df_XY=df_XY.drop(columns=['YY'])
 df_XY.shape
@@ -28,7 +28,7 @@ save_address1="./"
 
 
 obj1=ivae.IVAE(df_XY=df_XY,
-               reconst_coef=100,
+               reconst_coef=1000000,
                latent_size=10,
                kl_coef=0.0001*512,
                classifier_coef=10,
@@ -70,7 +70,7 @@ def mean_traversal(cell_type_id):
     h_max=min(50,len(healthy))
     c_max=min(50,len(cancer))
     traversal_step=100
-    line_decoded=np.zeros(shape=(traversal_step, 2083,h_max*c_max))
+    line_decoded=np.zeros(shape=(traversal_step, df_XY.shape[1]-1,h_max*c_max))
     index=0
     
     for h in random.sample(healthy, h_max):
