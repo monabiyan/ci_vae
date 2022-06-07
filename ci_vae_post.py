@@ -16,6 +16,7 @@ df_XY=df_XY.drop(columns=['YY'])
 df_XY.shape
 df_XY.head()
 ##############################################################   
+
 ##############################################################
 model_init=True
 model_tobe_trained=False
@@ -40,6 +41,10 @@ obj1.model_load(address="bb.pt")
 
 obj1.load_residuals(address='bb_residuals.pkl')
 print("model loaded")
+
+df_reconstructed=obj1.reconstruct_all_data(df_XY.drop(columns=['Y']))
+df_reconstructed.to_csv('df_reconstructed.csv')
+
 
 obj1.generate_test_results()
 print("test data generated")

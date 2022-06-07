@@ -430,6 +430,12 @@ class IVAE(MyDataset,IVAE_ARCH):
           zs.append(z.detach())
       return test_BCE_loss, test_KLD_loss, test_CEP_loss, test_total_loss, means, logvars, labels, images,zs
     #############################################################
+    def reconstruct_all_data(self,X_df):
+        self.model.eval()
+        x_hat,_,_,_,_=self.model(X_df.values)
+        df = pd.DataFrame(x_hat,columns=X_df.columns)
+        return(df)
+    #############################################################
     def generate_test_results(self):
       
       loss_scale_show=1
