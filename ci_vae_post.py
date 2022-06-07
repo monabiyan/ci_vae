@@ -42,12 +42,19 @@ obj1.model_load(address="bb.pt")
 obj1.load_residuals(address='bb_residuals.pkl')
 print("model loaded")
 
-df_reconstructed=obj1.reconstruct_all_data(df_XY.drop(columns=['Y']))
-df_reconstructed.to_csv('df_reconstructed.csv')
+
+
 
 
 obj1.generate_test_results()
 print("test data generated")
+
+
+df_reconstructed = pd.DataFrame(obj1.x_last, columns=df_XY.drop(columns=['Y']).columns)
+df_reconstructed.to_csv('df_reconstructed.csv')
+print("Full_data_reconstructed...")
+
+
 obj1.plot_residuals(init_index=110)
 print("regression analysis")
 obj1.regression_analysis(obj1.zs,obj1.y_last)
