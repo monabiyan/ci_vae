@@ -27,7 +27,6 @@ model_init=True
 model_file_address='./bb.pt'
 save_address1="./"
 
-
 obj1=ivae.IVAE(df_XY=df_XY,
                reconst_coef=1000000,
                latent_size=10,
@@ -50,7 +49,7 @@ obj1.generate_test_results()
 print("test data generated")
 
 
-df_reconstructed = pd.DataFrame(obj1.x_last, columns=df_XY.drop(columns=['Y']).columns)
+df_reconstructed = pd.DataFrame(obj1.x_last.cpu().detach().numpy(), columns=df_XY.drop(columns=['Y']).columns)
 df_reconstructed.to_csv('df_reconstructed.csv')
 print("Full_data_reconstructed...")
 
