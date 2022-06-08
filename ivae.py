@@ -520,7 +520,8 @@ class IVAE(MyDataset,IVAE_ARCH):
       labels_all_test = labels
       #abels_all_test = labels.cpu().detach().numpy()
       from sklearn.linear_model import LogisticRegression
-      reg = LogisticRegression(solver='liblinear',max_iter=500).fit(means_all_test, labels_all_test.reshape(-1, 1).ravel())
+      #reg = LogisticRegression(solver='liblinear',max_iter=500).fit(means_all_test, labels_all_test.reshape(-1, 1).ravel())
+      reg = LogisticRegression(solver='liblinear',max_iter=500).fit(means_all_test, labels_all_test)
       reg.predict(means_all_test)
       print(reg.score(means_all_test, labels_all_test.reshape(-1, 1)))
     #############################################################
