@@ -16,7 +16,6 @@ df_XY=df_XY.drop(columns=['YY'])
 df_XY.shape
 df_XY.head()
 ##############################################################   
-
 ##############################################################
 model_init=True
 model_tobe_trained=False
@@ -57,7 +56,7 @@ print("Full_data_reconstructed...")
 obj1.plot_residuals(init_index=110)
 print("regression analysis")
 obj1.regression_analysis(obj1.zs,obj1.y_last)
-
+df_XY['Y']
 print("calculate tsne_umap_pca")
 tsne_mat,umap_mat,pca_mat,Y=obj1.calculate_lower_dimensions(obj1.zs,obj1.y_last,N=20000)
 obj1.plot_lower_dimension(tsne_mat,Y,projection='3d',save_str='tsne3d.pdf')
@@ -78,9 +77,9 @@ def mean_traversal(cell_type_id):
     #healthy = [i for i, x in enumerate(YY) if x == 0]
     #cancer = [i for i, x in enumerate(YY) if x == 10]
     print(len(healthy),len(cancer))
-    h_max=min(1000,len(healthy))
-    c_max=min(1000,len(cancer))
-    traversal_step=20
+    h_max=min(50,len(healthy))
+    c_max=min(50,len(cancer))
+    traversal_step=50
     line_decoded=np.zeros(shape=(traversal_step, df_XY.shape[1]-1,h_max*c_max))
     index=0
     

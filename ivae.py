@@ -706,7 +706,7 @@ class IVAE(MyDataset,IVAE_ARCH):
         x1=miu_last[end_id]
         line = self.sample_data_on_a_line(x0,x1,number_of_images).to(device)
         if (flat):
-          line_decoded = np.fliplr(((model.decoder(line).cpu().detach().numpy())))
+          line_decoded = (((model.decoder(line).cpu().detach().numpy())))
         else:
           line_decoded = np.fliplr(((model.decoder(line).cpu().detach().numpy().reshape(number_of_images,28,28)*256)))
       return(line_decoded)
