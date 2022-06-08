@@ -55,7 +55,7 @@ print("Full_data_reconstructed...")
 
 obj1.plot_residuals(init_index=110)
 print("regression analysis")
-obj1.regression_analysis(obj1.zs,obj1.y_last)
+obj1.regression_analysis(obj1.zs,df_XY['Y'])
 df_XY['Y']
 print("calculate tsne_umap_pca")
 tsne_mat,umap_mat,pca_mat,Y=obj1.calculate_lower_dimensions(obj1.zs,obj1.y_last,N=20000)
