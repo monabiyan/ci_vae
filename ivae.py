@@ -694,7 +694,7 @@ class IVAE(MyDataset,IVAE_ARCH):
       n=number_of_images
       delta=line_distance/n
       line = torch.empty(size=(number_of_images, space_dim))
-      for i in range(number_of_images):
+      for i in range(number_of_images+1):
         line[i]=x0+i*delta
       line=line.cpu()
       return(line)
