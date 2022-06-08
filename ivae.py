@@ -692,11 +692,9 @@ class IVAE(MyDataset,IVAE_ARCH):
     # Simply traverse between two end points and create some equally spaced points on the line.
     def sample_data_on_a_line(self,x0,x1,number_of_images):
       space_dim=self.latent_size
-      line_distance=x1-x0
-      n=number_of_images
-      delta=line_distance/n
-      line = torch.empty(size=(number_of_images+1, space_dim))
-      for i in range(number_of_images+1):
+      delta=(x1-x0)/(number_of_images-1)
+      line = torch.empty(size=(number_of_images, space_dim))
+      for i in range(number_of_images):
         line[i]=x0+i*delta
       line=line.cpu()
       return(line)
