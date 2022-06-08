@@ -523,7 +523,7 @@ class IVAE(MyDataset,IVAE_ARCH):
       #reg = LogisticRegression(solver='liblinear',max_iter=500).fit(means_all_test, labels_all_test.reshape(-1, 1).ravel())
       reg = LogisticRegression(solver='liblinear',max_iter=500).fit(means_all_test, labels_all_test)
       reg.predict(means_all_test)
-      print(reg.score(means_all_test, labels_all_test.reshape(-1, 1)))
+      print(reg.score(means_all_test, labels_all_test))
     #############################################################
     def calculate_lower_dimensions(self,miu_last,y_last,N=1000):
       import random
