@@ -30,7 +30,7 @@ obj1=ivae.IVAE(df_XY=df_XY,
                reconst_coef=100000,
                latent_size=10,
                kl_coef=0.0001*512,
-               classifier_coef=10,
+               classifier_coef=1000,
                test_ratio=1)
 
 obj1.model_initialiaze()
