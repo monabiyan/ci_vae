@@ -1,5 +1,5 @@
 # Title :
-Class-Informed Variational AutoEncoder for Enhanced Within Class Interpolation
+Class-Informed Variational AutoEncoders (CI-VAEs) for Enhanced Within Class Data Interpolation
 
 
 ## Abstract:
