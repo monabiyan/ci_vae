@@ -7,3 +7,5 @@ We proposed Class-Informed Variational Autoencoder (CI-VAE) to enable interpolat
 
 
 <img width="540" alt="image" src="https://user-images.githubusercontent.com/11249004/173155790-b32cf9db-ed98-40d9-8fda-724158d5a098.png">
+
+<img width="461" alt="image" src="https://user-images.githubusercontent.com/11249004/173156033-f3498439-14ac-4625-bb86-5a2f106cce12.png">
