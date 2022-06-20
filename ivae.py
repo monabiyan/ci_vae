@@ -759,7 +759,7 @@ class IVAE(MyDataset,IVAE_ARCH):
           #return(synthetic_data)
 ############################################################# 
     def traverse(self,number_of_images,start_id,end_id,file_path_root="traverse",model_name="supervised_",flat=True):
-        line_decoded = self.generate_data_linear_from_a_to_b(self.model,self.miu_last,self.y_last,number_of_images,start_id,end_id,flat=flat)
+        line_decoded = self.generate_data_linear_from_a_to_b(self.model,self.zs,self.y_last,number_of_images,start_id,end_id,flat=flat)
         decoded_objects=line_decoded
         indicator = model_name+"_"+str(start_id)+"_"+str(end_id)
         if (flat==False):
