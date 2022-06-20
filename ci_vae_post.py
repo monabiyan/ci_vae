@@ -49,7 +49,11 @@ print("test data generated")
 
 
 df_reconstructed = pd.DataFrame(obj1.x_last.cpu().detach().numpy(), columns=df_XY.drop(columns=['Y']).columns)
+df_latent=pd.DataFrame(obj1.zs.cpu().detach().numpy())
+df_reconstructed_decoder=pd.DataFrame(obj1.decoder(obj1.zs).cpu().detach().numpy(), columns=df_XY.drop(columns=['Y']).columns)
 df_reconstructed.to_csv('df_reconstructed.csv')
+df_latent.to_csv('df_latent.csv')
+df_reconstructed_decoder.to_csv('df_reconstructed_decoder.csv')
 print("Full_data_reconstructed...")
 
 
