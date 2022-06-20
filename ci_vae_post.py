@@ -4,7 +4,8 @@ import ivae
 import pandas as pd
 import numpy as np
 import sklearn
-
+import torch
+device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 df_XY=pd.read_csv("sc_counts_final_small.csv")
 
 ##############################################################   
@@ -50,7 +51,8 @@ print("test data generated")
 
 df_reconstructed = pd.DataFrame(obj1.x_last.cpu().detach().numpy(), columns=df_XY.drop(columns=['Y']).columns)
 df_latent=pd.DataFrame(obj1.zs.cpu().detach().numpy())
-df_reconstructed_decoder=pd.DataFrame(obj1.decoder(obj1.zs).cpu().detach().numpy(), columns=df_XY.drop(columns=['Y']).columns)
+zs_tensor=torch.from_numpy(obj1.zs).float().to(device)
+df_reconstructed_decoder=pd.DataFrame(obj1.decoder(zs_tensor).cpu().detach().numpy(), columns=df_XY.drop(columns=['Y']).columns)
 df_reconstructed.to_csv('df_reconstructed.csv')
 df_latent.to_csv('df_latent.csv')
 df_reconstructed_decoder.to_csv('df_reconstructed_decoder.csv')
