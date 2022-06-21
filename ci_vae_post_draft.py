@@ -49,7 +49,9 @@ with torch.no_grad():
     
     obj1.generate_test_results()
     print("test data generated")
-    
+
+with torch.no_grad():
+    obj1.model.eval()
     
     df_reconstructed = pd.DataFrame(obj1.x_last.cpu().detach().numpy(), columns=df_XY.drop(columns=['Y']).columns)
     df_latent=pd.DataFrame(obj1.zs.cpu().detach().numpy())
