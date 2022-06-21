@@ -54,13 +54,12 @@ with torch.no_grad():
     obj1.model.eval()
     for x, y in obj1.testloader:
       x = x.to(device)
-      y = y.to(device)
-      y=y.to(device)
-      y=torch.tensor(torch.reshape(y, (-1,)), dtype=torch.long)
+      print(x.size())
       # forward
       x_hat,y_hat, mu, logvar,z = obj1.model(x)
     
     df_reconstructed = pd.DataFrame(x_hat.cpu().detach().numpy(), columns=df_XY.drop(columns=['Y']).columns)
+    print(df_reconstructed.shape)
     df_latent=pd.DataFrame(z.cpu().detach().numpy())
     
     obj1.model.eval()
