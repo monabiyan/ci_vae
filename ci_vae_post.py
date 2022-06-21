@@ -42,9 +42,6 @@ obj1.load_residuals(address='bb_residuals.pkl')
 print("model loaded")
 
 
-
-
-
 obj1.generate_test_results()
 print("test data generated")
 

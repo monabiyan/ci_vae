@@ -182,7 +182,7 @@ class IVAE_ARCH(nn.Module):
 class IVAE(MyDataset,IVAE_ARCH):
 #############################################################
 
-    def __init__(self,df_XY,latent_size=20,reconst_coef=100000,kl_coef=0.001*512,classifier_coef=1000,test_ratio=0.2):
+    def __init__(self,df_XY,latent_size=20,reconst_coef=100000,kl_coef=0.001*512,classifier_coef=1000,test_ratio=1):
         ##########
         self.reconst_coef = reconst_coef
         self.kl_coef = kl_coef
