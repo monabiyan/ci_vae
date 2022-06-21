@@ -38,29 +38,39 @@ obj1.model_initialiaze()
 
 obj1.model_load(address="bb.pt")
 
-obj1.load_residuals(address='bb_residuals.pkl')
-print("model loaded")
+
+with torch.no_grad():
+    obj1.model.eval()
 
 
-obj1.generate_test_results()
-print("test data generated")
-
-
-df_reconstructed = pd.DataFrame(obj1.x_last.cpu().detach().numpy(), columns=df_XY.drop(columns=['Y']).columns)
-df_latent=pd.DataFrame(obj1.zs.cpu().detach().numpy())
-print(obj1.zs)
-print(obj1.zs.size())
-
-zs_tensor=obj1.zs.to(device)
-df_reconstructed_decoder=pd.DataFrame(obj1.model.decoder(zs_tensor).cpu().detach().numpy(), columns=df_XY.drop(columns=['Y']).columns)
-print(obj1.model.decoder)
-df_reconstructed.to_csv('df_reconstructed.csv')
-df_latent.to_csv('df_latent.csv')
-df_reconstructed_decoder.to_csv('df_reconstructed_decoder.csv')
-print("Full_data_reconstructed...")
-
-
-obj1.plot_residuals(init_index=110)
-print("regression analysis")
-obj1.regression_analysis(obj1.zs,df_XY['Y'])
-df_XY['Y']
+    obj1.load_residuals(address='bb_residuals.pkl')
+    print("model loaded")
+    
+    
+    obj1.generate_test_results()
+    print("test data generated")
+    
+    
+    df_reconstructed = pd.DataFrame(obj1.x_last.cpu().detach().numpy(), columns=df_XY.drop(columns=['Y']).columns)
+    df_latent=pd.DataFrame(obj1.zs.cpu().detach().numpy())
+    print(obj1.zs)
+    print(obj1.zs.size())
+    
+    obj1.model.eval()
+    
+    zs_tensor=obj1.zs.to(device)
+    
+    
+    
+    df_reconstructed_decoder=pd.DataFrame(obj1.model.decoder(zs_tensor).cpu().detach().numpy(), columns=df_XY.drop(columns=['Y']).columns)
+    print(obj1.model.decoder)
+    df_reconstructed.to_csv('df_reconstructed.csv')
+    df_latent.to_csv('df_latent.csv')
+    df_reconstructed_decoder.to_csv('df_reconstructed_decoder.csv')
+    print("Full_data_reconstructed...")
+    
+    
+    obj1.plot_residuals(init_index=110)
+    print("regression analysis")
+    obj1.regression_analysis(obj1.zs,df_XY['Y'])
+    df_XY['Y']
