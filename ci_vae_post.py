@@ -60,7 +60,7 @@ with torch.no_grad():
       # forward
       x_hat,y_hat, mu, logvar,z = obj1.model(x)
     
-    df_reconstructed = pd.DataFrame(obj1.x_hat.cpu().detach().numpy(), columns=df_XY.drop(columns=['Y']).columns)
+    df_reconstructed = pd.DataFrame(x_hat.cpu().detach().numpy(), columns=df_XY.drop(columns=['Y']).columns)
     df_latent=pd.DataFrame(z.cpu().detach().numpy())
     
     obj1.model.eval()
