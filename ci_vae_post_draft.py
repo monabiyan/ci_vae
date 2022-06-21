@@ -71,6 +71,11 @@ with torch.no_grad():
     df_reconstructed_decoder.to_csv('df_reconstructed_decoder.csv')
     print("Full_data_reconstructed...")
     
+    print("========df_reconstructed========")
+    print(df_reconstructed)
+    print("========df_reconstructed_decoder========")
+    print(df_reconstructed_decoder)
+    
     
     obj1.plot_residuals(init_index=110)
     print("regression analysis")
