@@ -322,7 +322,7 @@ class IVAE(MyDataset,IVAE_ARCH):
         df_XY=pd.concat([df_X,df_Y],axis=1)
         return(df_XY)
 #############################################################    
-    def organize_data(self,test_ratio):
+    def organize_data(self,test_ratio=1):
         from sklearn.model_selection import train_test_split
         if (test_ratio==1):
             df_XY_train = self.df_XY
