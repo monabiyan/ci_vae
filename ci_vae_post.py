@@ -51,7 +51,7 @@ print("test data generated")
 
 df_reconstructed = pd.DataFrame(obj1.x_last.cpu().detach().numpy(), columns=df_XY.drop(columns=['Y']).columns)
 df_latent=pd.DataFrame(obj1.zs.cpu().detach().numpy())
-zs_tensor=obj1.zs.cpu()
+zs_tensor=obj1.zs.device()
 df_reconstructed_decoder=pd.DataFrame(obj1.model.decoder(zs_tensor).cpu().detach().numpy(), columns=df_XY.drop(columns=['Y']).columns)
 print(obj1.model.decoder)
 df_reconstructed.to_csv('df_reconstructed.csv')
