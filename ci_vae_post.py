@@ -52,19 +52,20 @@ with torch.no_grad():
 
 with torch.no_grad():
     obj1.model.eval()
+    for x, y in obj1.testloader:
+      x = x.to(device)
+      y = y.to(device)
+      y=y.to(device)
+      y=torch.tensor(torch.reshape(y, (-1,)), dtype=torch.long)
+      # forward
+      x_hat,y_hat, mu, logvar,z = obj1.model(x)
     
-    df_reconstructed = pd.DataFrame(obj1.x_last.cpu().detach().numpy(), columns=df_XY.drop(columns=['Y']).columns)
-    df_latent=pd.DataFrame(obj1.zs.cpu().detach().numpy())
-    print(obj1.zs)
-    print(obj1.zs.size())
+    df_reconstructed = pd.DataFrame(obj1.x_hat.cpu().detach().numpy(), columns=df_XY.drop(columns=['Y']).columns)
+    df_latent=pd.DataFrame(z.cpu().detach().numpy())
     
     obj1.model.eval()
     
-    zs_tensor=obj1.zs.to(device)
-    
-    
-    
-    df_reconstructed_decoder=pd.DataFrame(obj1.model.decoder(zs_tensor).cpu().detach().numpy(), columns=df_XY.drop(columns=['Y']).columns)
+    df_reconstructed_decoder=pd.DataFrame(obj1.model.decoder(z).cpu().detach().numpy(), columns=df_XY.drop(columns=['Y']).columns)
     print(obj1.model.decoder)
     df_reconstructed.to_csv('df_reconstructed.csv')
     df_latent.to_csv('df_latent.csv')
