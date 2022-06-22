@@ -335,7 +335,7 @@ class IVAE(MyDataset,IVAE_ARCH):
         data_test = MyDataset(df=df_XY_test,y_label=["Y"])
         import random
         random.seed(1234)
-        #self.BATCH_SIZE=512
+        self.BATCH_SIZE=512
         trainloader = torch.utils.data.DataLoader(dataset = data_train,
                                                    batch_size = self.BATCH_SIZE,
                                                   shuffle=False)
