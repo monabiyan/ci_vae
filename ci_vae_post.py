@@ -33,7 +33,7 @@ obj1=ivae.IVAE(df_XY=df_XY,
                kl_coef=0.0001*512,
                classifier_coef=1000,
                test_ratio=1)
-obj1.BATCH_SIZE=df_XY.shape[0]
+
 obj1.model_initialiaze()
 
 obj1.model_load(address="bb.pt")
