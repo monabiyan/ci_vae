@@ -49,7 +49,7 @@ class MyDataset(Dataset):
             return inpt
 
 class IVAE_ARCH(nn.Module):
-    def __init__(self,input_size,n_classes,latent_size,dropout_rate=0.10):
+    def __init__(self,input_size,n_classes,latent_size,dropout_rate=0.05):
         super().__init__()
         self.latent_size=latent_size
         self.dropout_rate = dropout_rate
@@ -62,7 +62,7 @@ class IVAE_ARCH(nn.Module):
             nn.Linear(self.input_size, medium_layer2),
             nn.ReLU(),
             nn.BatchNorm1d(medium_layer2),
-            nn.Dropout(p=dropout_rate),
+            #nn.Dropout(p=dropout_rate),
             ##################
             nn.Linear(medium_layer2, medium_layer),
             nn.ReLU(),
