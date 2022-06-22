@@ -37,7 +37,7 @@ save_address="bb"
 
 obj1=ivae.IVAE(df_XY=df_XY,
                reconst_coef=100000,
-               latent_size=10,
+               latent_size=20,
                kl_coef=0.0001*512,
                classifier_coef=1000,
                test_ratio=1)
