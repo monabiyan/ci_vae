@@ -54,7 +54,7 @@ class IVAE_ARCH(nn.Module):
         self.latent_size=latent_size
         self.dropout_rate = dropout_rate
         self.input_size=input_size
-        medium_layer=(self.input_size+latent_size)/2
+        medium_layer=int((self.input_size+latent_size)/2)
         #second_layer_size = int((self.input_size+latent_size ** 2)/2)
         medium_layer2 = int(0.8*self.input_size)
         medium_layer3 = int(medium_layer/2)
