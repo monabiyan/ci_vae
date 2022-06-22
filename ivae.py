@@ -66,7 +66,7 @@ class IVAE_ARCH(nn.Module):
             ##################
             nn.Linear(medium_layer2, medium_layer),
             nn.ReLU(),
-            nn.BatchNorm1d(medium_layer2),
+            nn.BatchNorm1d(medium_layer),
             nn.Dropout(p=dropout_rate),
             ##################
             nn.Linear(medium_layer , medium_layer),
