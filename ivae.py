@@ -309,7 +309,8 @@ class IVAE(MyDataset,IVAE_ARCH):
             iteration_no = iteration_no+1
             # train for one epocha
             self.train_total_loss = self.train(self.model)
-            self.test_BCE_loss, self.test_KLD_loss, self.test_CEP_loss, self.test_total_loss, self.means, self.logvars, self.labels, self.images,z = self.test(self.model)
+            self.test_BCE_loss, self.test_KLD_loss, self.test_CEP_loss, self.test_total_loss, self.means, self.logvars, self.labels, self.images, self.pred_Y, self.pred_X,z = self.test(self.model)
+
             #self.miu_last = torch.cat(self.means)
             #self.var_last = torch.cat(self.logvars)
             #self.y_last = torch.cat(self.labels)
