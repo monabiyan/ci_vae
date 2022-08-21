@@ -279,25 +279,7 @@ class IVAE(MyDataset,IVAE_ARCH):
         plt.show()
         plt.savefig(save_fig_address)
         
-#############################################################        
-    def pipeline(self,
-                 model_init=True,
-                 model_tobe_trained=True,
-                 epochs=1000,
-                 learning_rate= 1e-4,
-                 model_file_address='./test_model.pt'):
-        # Training the model
-        self.df_XY = self.MNIST_data()
-        self.organize_data(self.df_XY)
-        self.input_size = self.df_XY.shape[1]-1
-        
-        if model_init:
-            self.model_initialiaze(input_size=self.input_size)
-        if model_tobe_trained:
-            self.model_training(epochs,learning_rate)
-        self.model_save(address=model_file_address)
-        self.model_load(address=model_file_address)
-        self.plot_residuals()
+
 #############################################################
     def model_training(self,epochs,learning_rate):
         self.learning_rate = learning_rate
@@ -437,8 +419,7 @@ class IVAE(MyDataset,IVAE_ARCH):
         for x, y in self.testloader:
           x = x.to(device)
           y = y.to(device)
-          y=y.to(device)
-          y=torch.tensor(torch.reshape(y, (-1,)), dtype=torch.long)
+          y = torch.tensor(torch.reshape(y, (-1,)), dtype=torch.long)
           # forward
           x_hat,y_hat, mu, logvar,z = model(x)
           BCE_loss, KLD_loss, CEP_loss, total_loss = self.loss_function(x_hat, x, y_hat,y, mu, logvar)
@@ -784,7 +765,25 @@ class IVAE(MyDataset,IVAE_ARCH):
         self.original_with_augmented_data_all_X=torch.from_numpy(physical_data_all)
         self.original_with_augmented_data_all_lables=torch.from_numpy(physical_data_all_lables)
 #############################################################
-
+#############################################################        
+    def pipeline(self,
+                 model_init=True,
+                 model_tobe_trained=True,
+                 epochs=1000,
+                 learning_rate= 1e-4,
+                 model_file_address='./test_model.pt'):
+        # Training the model
+        self.df_XY = self.MNIST_data()
+        self.organize_data(self.df_XY)
+        self.input_size = self.df_XY.shape[1]-1
+        
+        if model_init:
+            self.model_initialiaze(input_size=self.input_size)
+        if model_tobe_trained:
+            self.model_training(epochs,learning_rate)
+        self.model_save(address=model_file_address)
+        self.model_load(address=model_file_address)
+        self.plot_residuals()
 
 ############################################    
 class Utils():
