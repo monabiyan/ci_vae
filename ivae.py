@@ -483,7 +483,7 @@ class IVAE(MyDataset,IVAE_ARCH):
           self.x_last=torch.cat(true_X)
           self.y_pred=torch.cat(pred_Y)
           self.x_pred=torch.cat(pred_X)
-          self.zs=torch.cat(z)
+          self.zs=torch.cat(zs)
     
           test_total_loss_scaled = test_total_loss*loss_scale_show/ len(self.testloader.dataset)
           test_BCE_loss_scaled = test_BCE_loss*loss_scale_show/ len(self.testloader.dataset)
