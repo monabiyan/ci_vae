@@ -423,7 +423,7 @@ class IVAE(MyDataset,IVAE_ARCH):
     #############################################################    
     # evaluates the model on the test set
     def test(self,model):
-      means, logvars, labels, images = list(), list(), list(), list()
+      means, logvars, true_Y, true_X, pred_Y, pred_X = list(), list(), list(), list(),list(), list()
       zs=[]
       test_BCE_loss=0
       test_KLD_loss=0
@@ -448,48 +448,20 @@ class IVAE(MyDataset,IVAE_ARCH):
           # log
           means.append(mu.detach())
           logvars.append(logvar.detach())
-          labels.append(y.detach())
-          images.append(x.detach())
+          true_Y.append(y.detach())
+          true_X.append(x.detach())
+          pred_Y.append(y_hat.detach())
+          pred_X.append(x_hat.detach())
           zs.append(z.detach())
-      return test_BCE_loss, test_KLD_loss, test_CEP_loss, test_total_loss, means, logvars, labels, images,zs
+
+      return test_BCE_loss, test_KLD_loss, test_CEP_loss, test_total_loss, means, logvars, true_Y, true_X, pred_Y, pred_X,zs
     #############################################################
     def reconstruct_all_data(self,X_df):
         self.model.eval()
         x_hat,_,_,_,_ = self.model(X_df.values)
         df = pd.DataFrame(x_hat,columns=X_df.columns)
         return(df)
-    #############################################################
-    def generate_test_results(self):
-      loss_scale_show=1
-      test_tracker=[]
-      test_BCE_tracker=[]
-      test_KLD_tracker=[]
-      test_CEP_tracker=[]
-      z_list=[]
-    
-      for epoch in range(1):
-          # the following line, will read test data from tes
-          test_BCE_loss, test_KLD_loss, test_CEP_loss, test_total_loss, means, logvars, labels, images,z = self.test(self.model)
-          
-          self.miu_last=torch.cat(means)
-          self.var_last=torch.cat(logvars)
-          self.y_last=torch.cat(labels)
-          self.x_last=torch.cat(images)
-          self.zs=torch.cat(z)
-    
-          test_total_loss_scaled = test_total_loss*loss_scale_show/ len(self.testloader.dataset)
-          test_BCE_loss_scaled = test_BCE_loss*loss_scale_show/ len(self.testloader.dataset)
-          test_KLD_loss_scaled = test_KLD_loss*loss_scale_show/ len(self.testloader.dataset)
-          test_CEP_loss_scaled = test_CEP_loss*loss_scale_show/ len(self.testloader.dataset)
-          
-          self.test_tracker.append(test_total_loss_scaled)
-          self.test_BCE_tracker.append(test_BCE_loss_scaled)
-          self.test_KLD_tracker.append(test_KLD_loss_scaled)
-          self.test_CEP_tracker.append(test_CEP_loss_scaled)
-          
-          #return(test_tracker,test_BCE_tracker,test_KLD_tracker,test_CEP_tracker)
-    #############################################################
-    #############################################################
+        #############################################################
     def generate_test_results(self):
       
       loss_scale_show=1
@@ -502,12 +474,14 @@ class IVAE(MyDataset,IVAE_ARCH):
     
       for epoch in range(1):
           # the following line, will read test data from tes
-          test_BCE_loss, test_KLD_loss, test_CEP_loss, test_total_loss, means, logvars, labels, images,z = self.test(self.model)
-          
+          #test_BCE_loss, test_KLD_loss, test_CEP_loss, test_total_loss, means, logvars, labels, images,z = self.test(self.model)
+          test_BCE_loss, test_KLD_loss, test_CEP_loss, test_total_loss, means, logvars, true_Y, true_X, pred_Y, pred_X, zs = self.test(self.model)
           self.miu_last=torch.cat(means)
           self.var_last=torch.cat(logvars)
-          self.y_last=torch.cat(labels)
-          self.x_last=torch.cat(images)
+          self.y_last=torch.cat(true_Y)
+          self.x_last=torch.cat(true_X)
+          self.y_pred=torch.cat(pred_Y)
+          self.x_pred=torch.cat(pred_X)
           self.zs=torch.cat(z)
     
           test_total_loss_scaled = test_total_loss*loss_scale_show/ len(self.testloader.dataset)
