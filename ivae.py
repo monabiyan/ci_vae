@@ -58,6 +58,13 @@ class IVAE_ARCH(nn.Module):
         #second_layer_size = int((self.input_size+latent_size ** 2)/2)
         medium_layer2 = int(0.8*self.input_size)
         medium_layer3 = int(medium_layer/2)
+
+        
+        medium_layer2= 20
+        medium_layer= 20
+        medium_layer= 10
+        
+
         self.encoder = nn.Sequential(
             nn.Linear(self.input_size, medium_layer2),
             nn.ReLU(),
