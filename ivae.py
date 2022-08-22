@@ -394,7 +394,7 @@ class IVAE(MyDataset,IVAE_ARCH):
     #############################################################   
     # performs one epoch of training and returns the training loss for this epoch
     def train(self):
-      model.train()
+      self.model.train()
       train_loss = 0
       for x, y in self.trainloader:
         x = x.to(device)
@@ -423,7 +423,7 @@ class IVAE(MyDataset,IVAE_ARCH):
       import random
       random.seed(1234)
       with torch.no_grad():
-        model.eval()
+        self.model.eval()
         for x, y in self.testloader:
           x = x.to(device)
           y = y.to(device)
