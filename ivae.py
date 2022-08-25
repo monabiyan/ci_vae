@@ -306,10 +306,7 @@ class IVAE(MyDataset,IVAE_ARCH):
             #self.var_last = torch.cat(self.logvars)
             #self.y_last = torch.cat(self.labels)
             #self.x_last = torch.cat(self.images)
-            print('len(self.trainloader.dataset)')
-            print(len(self.trainloader.dataset))
-            print('len(self.testloader.dataset)')
-            print(len(self.testloader.dataset))
+
             train_total_loss_scaled = self.train_total_loss*loss_scale_show/ len(self.trainloader.dataset)
             test_total_loss_scaled = self.test_total_loss*loss_scale_show/ len(self.testloader.dataset)
             test_BCE_loss_scaled = self.test_BCE_loss*loss_scale_show/ len(self.testloader.dataset)
