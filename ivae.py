@@ -412,7 +412,8 @@ class IVAE(MyDataset,IVAE_ARCH):
         total_loss.backward()
         self.optimizer.step()
         train_loss = train_loss + total_loss.item()
-      return train_loss
+       train_loss = train_loss / len(self.trainloader)
+       return train_loss
     #############################################################    
     # evaluates the model on the test set
     def test(self,model):
@@ -446,7 +447,11 @@ class IVAE(MyDataset,IVAE_ARCH):
           pred_X.append(x_hat.detach())
           zs.append(z.detach())
 
-      return test_BCE_loss, test_KLD_loss, test_CEP_loss, test_total_loss, means, logvars, true_Y, true_X, pred_Y, pred_X,zs
+        test_total_loss=test_total_loss/len(self.testloader)
+        test_BCE_loss = test_BCE_loss / len(self.testloader)
+        test_KLD_loss = test_KLD_loss / len(self.testloader)
+        test_CEP_loss = test_CEP_loss / len(self.testloader)
+        return test_BCE_loss, test_KLD_loss, test_CEP_loss, test_total_loss, means, logvars, true_Y, true_X, pred_Y, pred_X,zs
     #############################################################
     def reconstruct_all_data(self,X_df):
         self.model.eval()
