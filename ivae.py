@@ -63,7 +63,7 @@ class IVAE_ARCH(nn.Module):
         medium_layer2 = 20
         medium_layer = 20
         medium_layer3= 10
-        momentum=0.1
+        momentum=0.2
 
         
 
