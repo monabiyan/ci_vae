@@ -63,53 +63,54 @@ class IVAE_ARCH(nn.Module):
         medium_layer2 = 20
         medium_layer = 20
         medium_layer3= 10
+        momentum=0.001
 
         
 
         self.encoder = nn.Sequential(
             nn.Linear(self.input_size, medium_layer2),
             nn.ReLU(),
-            #nn.BatchNorm1d(medium_layer2),
-            #nn.Dropout(p=dropout_rate),
+            nn.BatchNorm1d(medium_layer2,momentum=momentum),
+            nn.Dropout(p=dropout_rate),
             ##################
             nn.Linear(medium_layer2, medium_layer),
             nn.ReLU(),
-            #nn.BatchNorm1d(medium_layer),
+            nn.BatchNorm1d(medium_layer,momentum=momentum),
             nn.Dropout(p=dropout_rate),
             ##################
             nn.Linear(medium_layer , medium_layer),
             nn.ReLU(),
-            #nn.BatchNorm1d(medium_layer),
+            nn.BatchNorm1d(medium_layer,momentum=momentum),
             nn.Dropout(p=dropout_rate),
             ##################
             nn.Linear(medium_layer , medium_layer),
             nn.ReLU(),
-            #nn.BatchNorm1d(medium_layer),
+            nn.BatchNorm1d(medium_layer,momentum=momentum),
             nn.Dropout(p=dropout_rate),
             ##################
             nn.Linear(medium_layer , medium_layer),
             nn.ReLU(),
-            #nn.BatchNorm1d(medium_layer),
+            nn.BatchNorm1d(medium_layer,momentum=momentum),
             nn.Dropout(p=dropout_rate),
             ##################
             nn.Linear(medium_layer , medium_layer),
             nn.ReLU(),
-            #nn.BatchNorm1d(medium_layer),
+            nn.BatchNorm1d(medium_layer,momentum=momentum),
             nn.Dropout(p=dropout_rate),
             ##################
             nn.Linear(medium_layer , medium_layer),
             nn.ReLU(),
-            #nn.BatchNorm1d(medium_layer),
+            nn.BatchNorm1d(medium_layer,momentum=momentum),
             nn.Dropout(p=dropout_rate),
             ##################
             nn.Linear(medium_layer , medium_layer),
             nn.ReLU(),
-            #nn.BatchNorm1d(medium_layer),
+            nn.BatchNorm1d(medium_layer,momentum=momentum),
             nn.Dropout(p=dropout_rate),
             ##################            
             nn.Linear(medium_layer , medium_layer3),
             nn.ReLU(),
-            #nn.BatchNorm1d(medium_layer3),
+            nn.BatchNorm1d(medium_layer3,momentum=momentum),
             nn.Dropout(p=dropout_rate),
             ##################
             nn.Linear(medium_layer3, latent_size * 2)
@@ -118,48 +119,48 @@ class IVAE_ARCH(nn.Module):
         self.decoder = nn.Sequential(
             nn.Linear(latent_size, medium_layer3),
             nn.ReLU(),
-            #nn.BatchNorm1d(medium_layer3),
+            nn.BatchNorm1d(medium_layer3,momentum=momentum),
             nn.Dropout(p=dropout_rate),
             ##################
             nn.Linear(medium_layer3, medium_layer),
             nn.ReLU(),
-            #nn.BatchNorm1d(medium_layer),
+            nn.BatchNorm1d(medium_layer,momentum=momentum),
             nn.Dropout(p=dropout_rate),
             ##################
             nn.Linear(medium_layer,medium_layer),
             nn.ReLU(),
-            #nn.BatchNorm1d(medium_layer),
+            nn.BatchNorm1d(medium_layer,momentum=momentum),
             nn.Dropout(p=dropout_rate),
             ##################
             nn.Linear(medium_layer,medium_layer),
             nn.ReLU(),
-            #nn.BatchNorm1d(medium_layer),
+            nn.BatchNorm1d(medium_layer,momentum=momentum),
             nn.Dropout(p=dropout_rate),
             ##################
             nn.Linear(medium_layer,medium_layer),
             nn.ReLU(),
-            #nn.BatchNorm1d(medium_layer),
+            nn.BatchNorm1d(medium_layer,momentum=momentum),
             nn.Dropout(p=dropout_rate),
             ##################
             nn.Linear(medium_layer,medium_layer),
             nn.ReLU(),
-            #nn.BatchNorm1d(medium_layer),
+            nn.BatchNorm1d(medium_layer,momentum=momentum),
             nn.Dropout(p=dropout_rate),
             ##################
             nn.Linear(medium_layer,medium_layer),
             nn.ReLU(),
-            #nn.BatchNorm1d(medium_layer),
+            nn.BatchNorm1d(medium_layer,momentum=momentum),
             nn.Dropout(p=dropout_rate),
             ##################     
             nn.Linear(medium_layer,medium_layer),
             nn.ReLU(),
-            #nn.BatchNorm1d(medium_layer),
+            nn.BatchNorm1d(medium_layer,momentum=momentum),
             nn.Dropout(p=dropout_rate),
             ##################     
             nn.Linear(medium_layer,medium_layer2),
             nn.ReLU(),
             #
-            #nn.BatchNorm1d(medium_layer2),
+            nn.BatchNorm1d(medium_layer2,momentum=momentum),
             nn.Dropout(p=dropout_rate),
             ##################      
             nn.Linear(medium_layer2,input_size)
