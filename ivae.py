@@ -19,7 +19,7 @@ import pandas as pd
 from torch.utils.data import Dataset
 import torch
 import random
-random.seed(1234)
+random.seed(0)
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -249,7 +249,7 @@ class IVAE(MyDataset,IVAE_ARCH):
         torch.save(self.model.state_dict(),address)
 #############################################################   
     def model_load(self,address):
-        random.seed(1234)
+        random.seed(0)
         self.model_initialiaze()
         self.model.load_state_dict(torch.load(address))
 #############################################################
@@ -298,14 +298,17 @@ class IVAE(MyDataset,IVAE_ARCH):
         for epoch in range(1, epochs+1):
             iteration_no = iteration_no+1
             # train for one epocha
-            self.train_total_loss = self.train(self.model)
-            self.test_BCE_loss, self.test_KLD_loss, self.test_CEP_loss, self.test_total_loss, self.means, self.logvars, self.labels, self.images, self.pred_Y, self.pred_X,z = self.test(self.model)
+            self.train_total_loss = self.train()
+            self.test_BCE_loss, self.test_KLD_loss, self.test_CEP_loss, self.test_total_loss, self.means, self.logvars, self.labels, self.images, self.pred_Y, self.pred_X,z = self.test()
 
             #self.miu_last = torch.cat(self.means)
             #self.var_last = torch.cat(self.logvars)
             #self.y_last = torch.cat(self.labels)
             #self.x_last = torch.cat(self.images)
-        
+            print('len(self.trainloader.dataset)')
+            print(len(self.trainloader.dataset))
+            print('len(self.testloader.dataset)')
+            print(len(self.testloader.dataset))
             train_total_loss_scaled = self.train_total_loss*loss_scale_show/ len(self.trainloader.dataset)
             test_total_loss_scaled = self.test_total_loss*loss_scale_show/ len(self.testloader.dataset)
             test_BCE_loss_scaled = self.test_BCE_loss*loss_scale_show/ len(self.testloader.dataset)
@@ -342,14 +345,14 @@ class IVAE(MyDataset,IVAE_ARCH):
             df_XY_train = self.df_XY
             df_XY_test = self.df_XY
         else:   
-            self.df_XY = self.df_XY.sample(frac = 1,random_state=1234)
+            self.df_XY = self.df_XY.sample(frac = 1,random_state=0)
             
             df_XY_train, df_XY_test = train_test_split(self.df_XY, test_size=test_ratio, random_state=1234)
         
         data_train = MyDataset(df=df_XY_train,y_label=["Y"])
         data_test = MyDataset(df=df_XY_test,y_label=["Y"])
         import random
-        random.seed(1234)
+        random.seed(0)
         self.BATCH_SIZE=512
         trainloader = torch.utils.data.DataLoader(dataset = data_train,
                                                    batch_size = self.BATCH_SIZE,
@@ -393,7 +396,7 @@ class IVAE(MyDataset,IVAE_ARCH):
     
     #############################################################   
     # performs one epoch of training and returns the training loss for this epoch
-    def train(self,model):
+    def train(self):
       model.train()
       train_loss = 0
       for x, y in self.trainloader:
@@ -403,7 +406,7 @@ class IVAE(MyDataset,IVAE_ARCH):
         y=torch.tensor(torch.reshape(y, (-1,)), dtype=torch.long)
         # ===================forward=====================
         self.optimizer.zero_grad()  # make sure gradients are not accimulated.
-        x_hat,y_hat, mu, logvar,z = model(x)
+        x_hat,y_hat, mu, logvar,z = self.model(x)
         BCE_loss, KLD_loss, CEP_loss, total_loss = self.loss_function(x_hat, x,y_hat,y, mu, logvar)
         # ===================backward====================
         #optimizer.zero_grad()
@@ -413,7 +416,7 @@ class IVAE(MyDataset,IVAE_ARCH):
       return train_loss
     #############################################################    
     # evaluates the model on the test set
-    def test(self,model):
+    def test(self):
       means, logvars, true_Y, true_X, pred_Y, pred_X = list(), list(), list(), list(),list(), list()
       zs=[]
       test_BCE_loss=0
@@ -421,7 +424,7 @@ class IVAE(MyDataset,IVAE_ARCH):
       test_CEP_loss=0
       test_total_loss = 0
       import random
-      random.seed(1234)
+      random.seed(0)
       with torch.no_grad():
         model.eval()
         for x, y in self.testloader:
@@ -429,7 +432,7 @@ class IVAE(MyDataset,IVAE_ARCH):
           y = y.to(device)
           y = torch.tensor(torch.reshape(y, (-1,)), dtype=torch.long)
           # forward
-          x_hat,y_hat, mu, logvar,z = model(x)
+          x_hat,y_hat, mu, logvar,z = self.model(x)
           BCE_loss, KLD_loss, CEP_loss, total_loss = self.loss_function(x_hat, x, y_hat,y, mu, logvar)
           test_total_loss = test_total_loss + total_loss.item()
           test_BCE_loss = test_BCE_loss + BCE_loss.item()
