@@ -299,8 +299,8 @@ class IVAE(MyDataset,IVAE_ARCH):
         for epoch in range(1, epochs+1):
             iteration_no = iteration_no+1
             # train for one epocha
-            self.train_total_loss = self.train()
-            self.test_BCE_loss, self.test_KLD_loss, self.test_CEP_loss, self.test_total_loss, self.means, self.logvars, self.labels, self.images, self.pred_Y, self.pred_X,z = self.test()
+            self.train_total_loss = self.train(self.model)
+            self.test_BCE_loss, self.test_KLD_loss, self.test_CEP_loss, self.test_total_loss, self.means, self.logvars, self.labels, self.images, self.pred_Y, self.pred_X,z = self.test(self.model)
 
             #self.miu_last = torch.cat(self.means)
             #self.var_last = torch.cat(self.logvars)
@@ -397,7 +397,7 @@ class IVAE(MyDataset,IVAE_ARCH):
     
     #############################################################   
     # performs one epoch of training and returns the training loss for this epoch
-    def train(self):
+    def train(self,model):
       model.train()
       train_loss = 0
       for x, y in self.trainloader:
@@ -407,7 +407,7 @@ class IVAE(MyDataset,IVAE_ARCH):
         y=torch.tensor(torch.reshape(y, (-1,)), dtype=torch.long)
         # ===================forward=====================
         self.optimizer.zero_grad()  # make sure gradients are not accimulated.
-        x_hat,y_hat, mu, logvar,z = self.model(x)
+        x_hat,y_hat, mu, logvar,z = model(x)
         BCE_loss, KLD_loss, CEP_loss, total_loss = self.loss_function(x_hat, x,y_hat,y, mu, logvar)
         # ===================backward====================
         #optimizer.zero_grad()
@@ -417,7 +417,7 @@ class IVAE(MyDataset,IVAE_ARCH):
       return train_loss
     #############################################################    
     # evaluates the model on the test set
-    def test(self):
+    def test(self,model):
       means, logvars, true_Y, true_X, pred_Y, pred_X = list(), list(), list(), list(),list(), list()
       zs=[]
       test_BCE_loss=0
@@ -433,7 +433,7 @@ class IVAE(MyDataset,IVAE_ARCH):
           y = y.to(device)
           y = torch.tensor(torch.reshape(y, (-1,)), dtype=torch.long)
           # forward
-          x_hat,y_hat, mu, logvar,z = self.model(x)
+          x_hat,y_hat, mu, logvar,z = model(x)
           BCE_loss, KLD_loss, CEP_loss, total_loss = self.loss_function(x_hat, x, y_hat,y, mu, logvar)
           test_total_loss = test_total_loss + total_loss.item()
           test_BCE_loss = test_BCE_loss + BCE_loss.item()
