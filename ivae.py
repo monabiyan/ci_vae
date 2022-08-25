@@ -63,7 +63,7 @@ class IVAE_ARCH(nn.Module):
         medium_layer2 = 20
         medium_layer = 20
         medium_layer3= 10
-        momentum=0.001
+        momentum=0.05
 
         
 
@@ -308,11 +308,11 @@ class IVAE(MyDataset,IVAE_ARCH):
             #self.y_last = torch.cat(self.labels)
             #self.x_last = torch.cat(self.images)
 
-            train_total_loss_scaled = self.train_total_loss*loss_scale_show/ len(self.trainloader.dataset)
-            test_total_loss_scaled = self.test_total_loss*loss_scale_show/ len(self.testloader.dataset)
-            test_BCE_loss_scaled = self.test_BCE_loss*loss_scale_show/ len(self.testloader.dataset)
-            test_KLD_loss_scaled = self.test_KLD_loss*loss_scale_show/ len(self.testloader.dataset)
-            test_CEP_loss_scaled = self.test_CEP_loss*loss_scale_show/ len(self.testloader.dataset)
+            train_total_loss_scaled = self.train_total_loss
+            test_total_loss_scaled = self.test_total_loss
+            test_BCE_loss_scaled = self.test_BCE_loss
+            test_KLD_loss_scaled = self.test_KLD_loss
+            test_CEP_loss_scaled = self.test_CEP_loss
             
         
             self.train_tracker.append(train_total_loss_scaled)
@@ -476,10 +476,10 @@ class IVAE(MyDataset,IVAE_ARCH):
           self.x_pred=torch.cat(pred_X)
           self.zs=torch.cat(zs)
     
-          test_total_loss_scaled = test_total_loss*loss_scale_show/ len(self.testloader.dataset)
-          test_BCE_loss_scaled = test_BCE_loss*loss_scale_show/ len(self.testloader.dataset)
-          test_KLD_loss_scaled = test_KLD_loss*loss_scale_show/ len(self.testloader.dataset)
-          test_CEP_loss_scaled = test_CEP_loss*loss_scale_show/ len(self.testloader.dataset)
+          test_total_loss_scaled = test_total_loss
+          test_BCE_loss_scaled = test_BCE_loss
+          test_KLD_loss_scaled = test_KLD_loss
+          test_CEP_loss_scaled = test_CEP_loss
           
           self.test_tracker.append(test_total_loss_scaled)
           self.test_BCE_tracker.append(test_BCE_loss_scaled)
