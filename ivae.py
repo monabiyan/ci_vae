@@ -63,7 +63,7 @@ class IVAE_ARCH(nn.Module):
         medium_layer2 = 20
         medium_layer = 20
         medium_layer3= 10
-        momentum=0.01
+        momentum=0.001
 
         
 
@@ -366,12 +366,12 @@ class IVAE(MyDataset,IVAE_ARCH):
     def loss_function(self,x_hat, x,y_hat,y, mu, logvar):
         # reconstruction loss (pushing the points apart)
         #BCE = nn.functional.binary_cross_entropy(x_hat, x.view(-1, input_size), reduction='sum')
-        mse_loss = nn.MSELoss()
-        #mae_loss = nn.L1Loss()
+        #mse_loss = nn.MSELoss()
+        mae_loss = nn.L1Loss()
         crs_entrpy = nn.CrossEntropyLoss()
         
         #BCE = nn.functional.binary_cross_entropy_with_logits(x_hat, x.view(-1, self.input_size))
-        BCE = mse_loss(x_hat, x.view(-1, self.input_size))
+        BCE = mae_loss(x_hat, x.view(-1, self.input_size))
         #BCE = F.binary_cross_entropy(x_hat, x.view(-1, self.input_size))
         CEP = crs_entrpy(y_hat.to(device),y.to(device))
         # KL divergence loss (the relative entropy between two distributions a multivariate gaussian and a normal)
