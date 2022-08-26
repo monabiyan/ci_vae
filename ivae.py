@@ -576,7 +576,7 @@ class IVAE(MyDataset,IVAE_ARCH):
 
         synthtic_data=line_decoded[:,:,0]
         for i in range(1,index):
-            synthtic_data = np.concatenate(synthtic_data,line_decoded[:,:,i],axis=0)
+            synthtic_data = np.concatenate((synthtic_data,line_decoded[:,:,i]),axis=0)
 
         return(synthtic_data)
 #############################################################
