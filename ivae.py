@@ -544,7 +544,7 @@ class IVAE(MyDataset,IVAE_ARCH):
 
         for i in range(len(set(self.df_XY['Y']))):
             print(i)
-            ff['mean'][str(i)],ff['med'][str(i)],ff['std'][str(i)]=self.mean_traversal(i)
+            ff['mean'][str(i)],ff['med'][str(i)],ff['std'][str(i)]=self.traversal_single_group(i)
 
         import pickle
         with open('results_dict.pkl', 'wb') as f:
