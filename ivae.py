@@ -222,7 +222,7 @@ class IVAE(MyDataset,IVAE_ARCH):
         ##########
         self.labels1=df_XY['Y'].tolist()
         self.labels2=df_XY['YY'].tolist()
-        df_XY['Y']=labels1
+        df_XY['Y']=self.labels1
         df_XY=df_XY.drop(columns=['YY'])
         self.df_XY=df_XY
         #self.df_XY = self.MNIST_data()
