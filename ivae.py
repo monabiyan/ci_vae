@@ -559,15 +559,15 @@ class IVAE(MyDataset,IVAE_ARCH):
         start = list(ant_df.loc[ant_df['Y']==cell_type_id]['index'])
         end = list(ant_df.loc[ant_df['Y']==cell_type_id]['index'])
 
-        print(len(healthy),len(cancer))
-        h_max=min(100,len(healthy))
-        c_max=min(100,len(cancer))
+        print(len(start),len(end))
+        h_max=min(100,len(start))
+        c_max=min(100,len(end))
         
         line_decoded=np.zeros(shape=(traversal_step, self.df_XY.shape[1]-1,h_max*c_max))
         index=0
         
-        for h in random.sample(healthy, h_max):
-            for c in random.sample(cancer, c_max):
+        for h in random.sample(start, h_max):
+            for c in random.sample(end, c_max):
                 ss =self.traverse(number_of_images=traversal_step, start_id=h, end_id=c,model_name="supervised_")
                 line_decoded[:,:,index]=ss
                 index=index+1
