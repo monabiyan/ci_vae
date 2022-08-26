@@ -536,13 +536,13 @@ class IVAE(MyDataset,IVAE_ARCH):
         #return(line_decoded)
 #############################################################  
 #############################################################
-    def traversal_all_groups():
+    def traversal_all_groups(self):
         ff=dict()
         ff['mean']=dict()
         ff['med']=dict()
         ff['std']=dict()
 
-        for i in range(len(set(ant_df['Y']))):
+        for i in range(len(set(self.df_XY['Y']))):
             print(i)
             ff['mean'][str(i)],ff['med'][str(i)],ff['std'][str(i)]=self.mean_traversal(i)
 
