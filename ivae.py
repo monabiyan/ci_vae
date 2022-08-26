@@ -214,14 +214,16 @@ class IVAE_ARCH(nn.Module):
     
 
 class IVAE(MyDataset,IVAE_ARCH):
-#############################################################
-
     def __init__(self,df_XY,latent_size=20,reconst_coef=100000,kl_coef=0.001*512,classifier_coef=1000,test_ratio=1):
         ##########
         self.reconst_coef = reconst_coef
         self.kl_coef = kl_coef
         self.classifier_coef = classifier_coef
         ##########
+        self.labels1=df_XY['Y'].tolist()
+        self.labels2=df_XY['YY'].tolist()
+        df_XY['Y']=labels1
+        df_XY=df_XY.drop(columns=['YY'])
         self.df_XY=df_XY
         #self.df_XY = self.MNIST_data()
         ##########
@@ -236,7 +238,8 @@ class IVAE(MyDataset,IVAE_ARCH):
         
         MyDataset.__init__(self,df=self.df_XY)
         self.organize_data(test_ratio)
-#############################################################
+#############################################################  
+#############################################################  
     def model_initialiaze(self):
         self.model=IVAE_ARCH(input_size=self.input_size,
             n_classes=len(set(list(self.df_XY['Y']))),
@@ -246,15 +249,18 @@ class IVAE(MyDataset,IVAE_ARCH):
         self.test_BCE_tracker=[]
         self.test_KLD_tracker=[]
         self.test_CEP_tracker=[]
-#############################################################        
+#############################################################  
+#############################################################          
     def model_save(self,address):
         torch.save(self.model.state_dict(),address)
-#############################################################   
+#############################################################  
+#############################################################     
     def model_load(self,address):
         random.seed(0)
         self.model_initialiaze()
         self.model.load_state_dict(torch.load(address))
-#############################################################
+#############################################################  
+#############################################################  
     def save_residuals(self,address='residuals.pkl'):
         import pickle
         residuals={'train_tracker':self.train_tracker,
@@ -264,7 +270,8 @@ class IVAE(MyDataset,IVAE_ARCH):
            'test_tracker':self.test_tracker}
         with open(address, 'wb') as f:
             pickle.dump(residuals, f)
-#############################################################
+#############################################################  
+#############################################################  
     def load_residuals(self,address='residuals.pkl'):
         import pickle
         with open(address, 'rb') as f:
@@ -274,10 +281,12 @@ class IVAE(MyDataset,IVAE_ARCH):
             self.test_KLD_tracker = residuals['test_KLD_tracker']
             self.test_CEP_tracker = residuals['test_CEP_tracker']
             self.test_tracker = residuals['test_tracker']
-#############################################################   
+#############################################################  
+#############################################################    
     def visualize_model_architecture(self):
         pass
-############################################################# 
+#############################################################  
+#############################################################  
     def plot_residuals(self,init_index=0,save_fig_address="./residuals.pdf"):
         import matplotlib.pyplot as plt
         plt.plot(self.train_tracker[init_index:], label='Training Total loss')
@@ -288,9 +297,34 @@ class IVAE(MyDataset,IVAE_ARCH):
         plt.legend()
         plt.show()
         plt.savefig(save_fig_address)
+#############################################################  
+#############################################################  
+    def organize_data(self,test_ratio=1):
+        from sklearn.model_selection import train_test_split
+        if (test_ratio==1):
+            df_XY_train = self.df_XY
+            df_XY_test = self.df_XY
+        else:   
+            self.df_XY = self.df_XY.sample(frac = 1,random_state=0)
+            
+            df_XY_train, df_XY_test = train_test_split(self.df_XY, test_size=test_ratio, random_state=1234)
         
-
-#############################################################
+        data_train = MyDataset(df=df_XY_train,y_label=["Y"])
+        data_test = MyDataset(df=df_XY_test,y_label=["Y"])
+        import random
+        random.seed(0)
+        self.BATCH_SIZE=512
+        trainloader = torch.utils.data.DataLoader(dataset = data_train,
+                                                   batch_size = self.BATCH_SIZE,
+                                                  shuffle=False)
+        testloader = torch.utils.data.DataLoader(dataset = data_test,
+                                                  batch_size = df_XY_test.shape[0],
+                                                 shuffle=False)
+        self.trainloader = trainloader
+        self.testloader = testloader
+        # Reconstruction + KL divergence losses summed over all elements and batch
+#############################################################  
+#############################################################  
     def model_training(self,epochs,learning_rate):
         self.learning_rate = learning_rate
         self.optimizer = torch.optim.Adam(self.model.parameters(),lr=learning_rate,weight_decay=2e-5)
@@ -322,78 +356,9 @@ class IVAE(MyDataset,IVAE_ARCH):
             self.test_CEP_tracker.append(test_CEP_loss_scaled)
             # print the test loss for the epoch
             print(f'====> Epoch: {iteration_no} total_train_loss: {train_total_loss_scaled:.6f} Total_test_loss: {test_total_loss_scaled:.6f} Total_BCE_test_loss: {test_BCE_loss_scaled:.6f} Total_KLD_test_loss: {test_KLD_loss_scaled:.6f} Total_CEP_test_loss: {test_CEP_loss_scaled:.6f}')
-          
+        
+#############################################################  
 #############################################################   
-    def MNIST_data(self):
-        from keras.datasets import mnist
-        (train_X, train_y), (test_X, test_y) = mnist.load_data()
-        train_X = np.reshape(train_X, (60000,28*28))
-        test_X = np.reshape(test_X, (10000,28*28))
-        X = np.concatenate((train_X,test_X),axis=0)
-        X = X/255
-        Y = np.concatenate((train_y,test_y),axis=0)
-        df_X=pd.DataFrame(X)
-        df_Y=pd.DataFrame(Y)
-        df_Y.columns=["Y"]
-        df_XY=pd.concat([df_X,df_Y],axis=1)
-        return(df_XY)
-#############################################################    
-    def organize_data(self,test_ratio=1):
-        from sklearn.model_selection import train_test_split
-        if (test_ratio==1):
-            df_XY_train = self.df_XY
-            df_XY_test = self.df_XY
-        else:   
-            self.df_XY = self.df_XY.sample(frac = 1,random_state=0)
-            
-            df_XY_train, df_XY_test = train_test_split(self.df_XY, test_size=test_ratio, random_state=1234)
-        
-        data_train = MyDataset(df=df_XY_train,y_label=["Y"])
-        data_test = MyDataset(df=df_XY_test,y_label=["Y"])
-        import random
-        random.seed(0)
-        self.BATCH_SIZE=512
-        trainloader = torch.utils.data.DataLoader(dataset = data_train,
-                                                   batch_size = self.BATCH_SIZE,
-                                                  shuffle=False)
-        testloader = torch.utils.data.DataLoader(dataset = data_test,
-                                                  batch_size = df_XY_test.shape[0],
-                                                 shuffle=False)
-        self.trainloader = trainloader
-        self.testloader = testloader
-        # Reconstruction + KL divergence losses summed over all elements and batch
-    #############################################################
-    def loss_function(self,x_hat, x,y_hat,y, mu, logvar):
-        # reconstruction loss (pushing the points apart)
-        #BCE = nn.functional.binary_cross_entropy(x_hat, x.view(-1, input_size), reduction='sum')
-        #mse_loss = nn.MSELoss()
-        mae_loss = nn.L1Loss()
-        crs_entrpy = nn.CrossEntropyLoss()
-        
-        #BCE = nn.functional.binary_cross_entropy_with_logits(x_hat, x.view(-1, self.input_size))
-        BCE = mae_loss(x_hat, x.view(-1, self.input_size))
-        #BCE = F.binary_cross_entropy(x_hat, x.view(-1, self.input_size))
-        CEP = crs_entrpy(y_hat.to(device),y.to(device))
-        # KL divergence loss (the relative entropy between two distributions a multivariate gaussian and a normal)
-        # (enforce a radius of 1 in each direction + pushing the means towards zero)
-        #KLD = 0.5 * torch.sum(logvar.exp() - logvar - 1 + mu.pow(2))
-        #KLD=torch.mean(torch.abs(KLD))
-        KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
-        KLD = KLD/self.BATCH_SIZE
-        #KLD2= torch.mean(-0.5 * torch.sum(1 + logvar - mu ** 2 - logvar.exp(), dim = 1), dim = 0)
-        #print(KLD)
-
-        #BCE = BCE*reconst_coef
-        #KLD = KLD * kl_coef
-        #CEP = CEP*classifier_coef
-        
-    
-        #Tot_Loss = BCE + KLD
-        
-        Tot_Loss = BCE * self.reconst_coef + KLD * self.kl_coef + CEP * self.classifier_coef
-        return BCE * self.reconst_coef, KLD * self.kl_coef, CEP * self.classifier_coef, Tot_Loss  # we can use a beta parameter here (BCE + beta * KLD)
-    
-    #############################################################   
     # performs one epoch of training and returns the training loss for this epoch
     def train(self,model):
       model.train()
@@ -414,7 +379,8 @@ class IVAE(MyDataset,IVAE_ARCH):
         train_loss = train_loss + total_loss.item()
       train_loss = train_loss / len(self.trainloader)
       return train_loss
-    #############################################################    
+#############################################################  
+#############################################################    
     # evaluates the model on the test set
     def test(self,model):
       means, logvars, true_Y, true_X, pred_Y, pred_X = list(), list(), list(), list(),list(), list()
@@ -452,13 +418,45 @@ class IVAE(MyDataset,IVAE_ARCH):
       test_KLD_loss = test_KLD_loss / len(self.testloader)
       test_CEP_loss = test_CEP_loss / len(self.testloader)
       return test_BCE_loss, test_KLD_loss, test_CEP_loss, test_total_loss, means, logvars, true_Y, true_X, pred_Y, pred_X,zs
-    #############################################################
+#############################################################  
+#############################################################      
+    def loss_function(self,x_hat, x,y_hat,y, mu, logvar):
+        # reconstruction loss (pushing the points apart)
+        #BCE = nn.functional.binary_cross_entropy(x_hat, x.view(-1, input_size), reduction='sum')
+        #mse_loss = nn.MSELoss()
+        mae_loss = nn.L1Loss()
+        crs_entrpy = nn.CrossEntropyLoss()
+        
+        #BCE = nn.functional.binary_cross_entropy_with_logits(x_hat, x.view(-1, self.input_size))
+        BCE = mae_loss(x_hat, x.view(-1, self.input_size))
+        #BCE = F.binary_cross_entropy(x_hat, x.view(-1, self.input_size))
+        CEP = crs_entrpy(y_hat.to(device),y.to(device))
+        # KL divergence loss (the relative entropy between two distributions a multivariate gaussian and a normal)
+        # (enforce a radius of 1 in each direction + pushing the means towards zero)
+        #KLD = 0.5 * torch.sum(logvar.exp() - logvar - 1 + mu.pow(2))
+        #KLD=torch.mean(torch.abs(KLD))
+        KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
+        KLD = KLD/self.BATCH_SIZE
+        #KLD2= torch.mean(-0.5 * torch.sum(1 + logvar - mu ** 2 - logvar.exp(), dim = 1), dim = 0)
+        #print(KLD)
+
+        #BCE = BCE*reconst_coef
+        #KLD = KLD * kl_coef
+        #CEP = CEP*classifier_coef
+        
+        #Tot_Loss = BCE + KLD
+        
+        Tot_Loss = BCE * self.reconst_coef + KLD * self.kl_coef + CEP * self.classifier_coef
+        return BCE * self.reconst_coef, KLD * self.kl_coef, CEP * self.classifier_coef, Tot_Loss  # we can use a beta parameter here (BCE + beta * KLD)
+#############################################################  
+#############################################################  
     def reconstruct_all_data(self,X_df):
         self.model.eval()
         x_hat,_,_,_,_ = self.model(X_df.values)
         df = pd.DataFrame(x_hat,columns=X_df.columns)
         return(df)
-        #############################################################
+#############################################################  
+#############################################################  
     def generate_test_results(self):
       
       loss_scale_show=1
@@ -492,15 +490,69 @@ class IVAE(MyDataset,IVAE_ARCH):
           self.test_CEP_tracker.append(test_CEP_loss_scaled)
           
           #return(test_tracker,test_BCE_tracker,test_KLD_tracker,test_CEP_tracker)
-    #############################################################
-
-    def plot_zs_pca2(self):
-        #self.zs
-        #self.y_last
-        pass
+#############################################################  
+#############################################################  
+    def traversal_single_group(cell_type_id):
+        ant_df=pd.DataFrame({'Y':self.labels1,'YY':self.labels2,'index':list(range(0, len(self.labels1)))})
+        import random
+        healthy = list(ant_df.loc[ant_df['YY']==0].loc[ant_df['Y']==cell_type_id]['index'])
+        cancer = list(ant_df.loc[ant_df['YY']==1].loc[ant_df['Y']==cell_type_id]['index'])
+        #healthy = [i for i, x in enumerate(YY) if x == 0]
+        #cancer = [i for i, x in enumerate(YY) if x == 10]
+        print(len(healthy),len(cancer))
+        h_max=min(100,len(healthy))
+        c_max=min(100,len(cancer))
+        traversal_step=50
+        line_decoded=np.zeros(shape=(traversal_step, self.df_XY.shape[1]-1,h_max*c_max))
+        index=0
         
-    
-    
+        for h in random.sample(healthy, h_max):
+            for c in random.sample(cancer, c_max):
+                #print((sc_df_filtered2.iloc[c,:-1]-sc_df_filtered2.iloc[h,:-1]).mean())
+                ss =obj1.traverse(number_of_images=traversal_step, start_id=h, end_id=c,model_name="supervised_")
+                #print(ss.shape)
+                #ss = ss/ss[0]
+                #print(ss)
+                #line_decoded = np.add(line_decoded,ss)
+                line_decoded[:,:,index]=ss
+                index=index+1
+        #line_decoded = line_decoded/(50*50)
+        line_decoded_med = np.median(line_decoded,axis=2)
+        line_decoded_mean = np.mean(line_decoded,axis=2)
+        line_decoded_std = np.std(line_decoded,axis=2)
+        print(line_decoded_med)
+        
+        gg_med=pd.DataFrame(line_decoded_med)
+        gg_med.columns=self.df_XY.columns[0:-1]
+        
+        gg_mean=pd.DataFrame(line_decoded_mean)
+        gg_mean.columns=self.df_XY.columns[0:-1]
+        
+        gg_std=pd.DataFrame(line_decoded_std)
+        gg_std.columns=self.df_XY.columns[0:-1]
+        
+        #gg= gg.div(gg.iloc[0])
+        return(gg_med,gg_mean,gg_std)
+        #return(line_decoded)
+#############################################################  
+#############################################################
+    def traversal_all_groups():
+        ff=dict()
+        ff['mean']=dict()
+        ff['med']=dict()
+        ff['std']=dict()
+
+        for i in range(len(set(ant_df['Y']))):
+            print(i)
+            ff['mean'][str(i)],ff['med'][str(i)],ff['std'][str(i)]=self.mean_traversal(i)
+
+        import pickle
+        with open('results_dict.pkl', 'wb') as f:
+            pickle.dump(ff, f)
+        return(ff)
+
+#############################################################  
+#############################################################    
     def regression_analysis(self,means,labels):
       #means_all_test=torch.empty_like(means[0])
       #for i in range(len(means)):
@@ -518,7 +570,8 @@ class IVAE(MyDataset,IVAE_ARCH):
       reg = LogisticRegression(solver='liblinear',max_iter=500).fit(means_all_test, labels_all_test)
       reg.predict(means_all_test)
       print(reg.score(means_all_test, labels_all_test))
-    #############################################################
+#############################################################  
+#############################################################  
     def calculate_lower_dimensions(self,miu_last,y_last,N=1000):
       import random
       index_rand=random.sample(range(1, miu_last.shape[0]), N)
@@ -537,7 +590,8 @@ class IVAE(MyDataset,IVAE_ARCH):
       pca = PCA(n_components=3)
       E_PCA=pca.fit_transform(X.cpu())
       return(E_TSNE,E_UMAP,E_PCA,Y)
-    #############################################################
+#############################################################  
+#############################################################  
     def plot_lower_dimension(self,EE,Y,size_dot=1,projection='2d',save_str='myplot.pdf'):
       
         if projection == '2d':
@@ -565,7 +619,8 @@ class IVAE(MyDataset,IVAE_ARCH):
         ax.legend()
         plt.savefig(save_str)
         plt.show()
-#############################################################      
+#############################################################  
+#############################################################        
     def display_images_real_vs_synthetic(self,number_class=3,image_number=40,image_shape=28,normalized_factor=256):
         fig = plt.figure(figsize=(10, 7))
         self.model.eval()
@@ -589,7 +644,8 @@ class IVAE(MyDataset,IVAE_ARCH):
         plt.axis('off')
         plt.title("Difference")
         print("mean difference = "+str(np.mean(np.abs(img_diference))))
-#############################################################
+#############################################################  
+#############################################################  
     def distance_kl(self,mean1,std1,mean2,std2):
             n=std1.shape[0]
             std1_mat=np.zeros((n,n))
@@ -601,7 +657,8 @@ class IVAE(MyDataset,IVAE_ARCH):
             expression3 = np.matmul(np.matmul((mean1-mean2).T,np.linalg.inv(std2_mat)),(mean1-mean2)) 
             distance = 1/2*(expression1-n+expression2+expression3)
             return(distance)
-#############################################################
+#############################################################  
+#############################################################  
     def latent_traversal(self,
                          points_mean,
                          points_std,
@@ -655,10 +712,12 @@ class IVAE(MyDataset,IVAE_ARCH):
             plt.show()
             
         return(list(shrt_pth[0]))
-#############################################################
+#############################################################  
+#############################################################  
     def getEquidistantPoints(self,p1, p2, parts):
         return (list(zip(*[np.linspace(p1[i], p2[i], parts+1) for i in range(len(p1))])))
-#############################################################
+#############################################################  
+#############################################################  
     def latent_traversal_interpolated(self,
                                       points_mean,
                                       points_std,
@@ -682,7 +741,8 @@ class IVAE(MyDataset,IVAE_ARCH):
         points_std_interpolated=np.array(ll)
         
         return((points_mean_interpolated,points_std_interpolated))
-#############################################################    
+#############################################################  
+#############################################################     
     # Simply traverse between two end points and create some equally spaced points on the line.
     def sample_data_on_a_line(self,x0,x1,number_of_images):
       space_dim=self.latent_size
@@ -692,7 +752,8 @@ class IVAE(MyDataset,IVAE_ARCH):
         line[i]=x0+i*delta
       line=line.cpu()
       return(line)
-#############################################################
+#############################################################  
+#############################################################  
     def generate_data_linear_from_a_to_b(self,model,miu_last,y_last,number_of_images,start_id,end_id,flat=False):
       model.eval()
       with torch.no_grad():
@@ -704,6 +765,7 @@ class IVAE(MyDataset,IVAE_ARCH):
         else:
           line_decoded = np.fliplr(((model.decoder(line).cpu().detach().numpy().reshape(number_of_images,28,28)*256)))
       return(line_decoded)
+#############################################################  
 #############################################################  
     def save_GIF(self,decoded_objects,file_path_root,indicator,speed=5):
       import numpy as np
@@ -731,7 +793,8 @@ class IVAE(MyDataset,IVAE_ARCH):
       plt.close()
       os.remove(file_path)
       imageio.mimsave(file_path_root +indicator+ ".gif", images, fps=speed) #Creates gif out of list of images
-#############################################################    
+#############################################################  
+#############################################################   
     def generate_synthetic_data(self,model,miu_last,y_last,number_of_additional_data):
           import numpy as np
           number_of_images_per_traversal=20
@@ -751,7 +814,8 @@ class IVAE(MyDataset,IVAE_ARCH):
             #synthetic_data_all = torch.cat((synthetic_data_all, synthetic_data), 0)
           return(synthetic_data_all)
           #return(synthetic_data)
-############################################################# 
+#############################################################  
+#############################################################  
     def traverse(self,number_of_images,start_id,end_id,file_path_root="traverse",model_name="supervised_",flat=True):
         line_decoded = self.generate_data_linear_from_a_to_b(self.model,self.zs,self.y_last,number_of_images,start_id,end_id,flat=flat)
         decoded_objects=line_decoded
@@ -759,7 +823,8 @@ class IVAE(MyDataset,IVAE_ARCH):
         if (flat==False):
             self.save_GIF(decoded_objects,file_path_root,indicator)
         return(line_decoded)
-#############################################################
+#############################################################  
+#############################################################  
     def traverse_multiple(self,number_class,number_of_images,start_id,end_id,file_path_root="multiple_traverse"):
         for i in range(10):
           number_class=2
@@ -773,6 +838,7 @@ class IVAE(MyDataset,IVAE_ARCH):
           indicator = "multiple_"+model_name+str(number_class)+"_"+str(start_id)+"_"+str(end_id)
           self.save_GIF(decoded_objects,file_path_root,indicator)
           print("successful!")
+#############################################################  
 #############################################################   
     def append_augmented_data_to_original(self,synthetic_physical_data,number_class,number_of_additional_data):
         physical_data_all=np.append(self.x_last.cpu().numpy(),synthetic_physical_data,axis=0)
@@ -799,8 +865,24 @@ class IVAE(MyDataset,IVAE_ARCH):
         self.model_save(address=model_file_address)
         self.model_load(address=model_file_address)
         self.plot_residuals()
-
-############################################    
+#############################################################
+#############################################################   
+    def MNIST_data(self):
+        from keras.datasets import mnist
+        (train_X, train_y), (test_X, test_y) = mnist.load_data()
+        train_X = np.reshape(train_X, (60000,28*28))
+        test_X = np.reshape(test_X, (10000,28*28))
+        X = np.concatenate((train_X,test_X),axis=0)
+        X = X/255
+        Y = np.concatenate((train_y,test_y),axis=0)
+        df_X=pd.DataFrame(X)
+        df_Y=pd.DataFrame(Y)
+        df_Y.columns=["Y"]
+        df_XY=pd.concat([df_X,df_Y],axis=1)
+        return(df_XY)  
+#############################################################
+#############################################################
+#############################################################
 class Utils():
  def linear_traversal_original_coordinates(self):
     from keras.datasets import mnist
