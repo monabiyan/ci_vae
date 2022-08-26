@@ -509,7 +509,7 @@ class IVAE(MyDataset,IVAE_ARCH):
         for h in random.sample(healthy, h_max):
             for c in random.sample(cancer, c_max):
                 #print((sc_df_filtered2.iloc[c,:-1]-sc_df_filtered2.iloc[h,:-1]).mean())
-                ss =obj1.traverse(number_of_images=traversal_step, start_id=h, end_id=c,model_name="supervised_")
+                ss =self.traverse(number_of_images=traversal_step, start_id=h, end_id=c,model_name="supervised_")
                 #print(ss.shape)
                 #ss = ss/ss[0]
                 #print(ss)
