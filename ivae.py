@@ -517,9 +517,9 @@ class IVAE(MyDataset,IVAE_ARCH):
                 line_decoded[:,:,index]=ss
                 index=index+1
         #line_decoded = line_decoded/(50*50)
-        line_decoded_med = np.median(line_decoded,axis=2)
-        line_decoded_mean = np.mean(line_decoded,axis=2)
-        line_decoded_std = np.std(line_decoded,axis=2)
+        line_decoded_med = np.median(line_decoded, axis=2)
+        line_decoded_mean = np.mean(line_decoded, axis=2)
+        line_decoded_std = np.std(line_decoded, axis=2)
         print(line_decoded_med)
         
         gg_med=pd.DataFrame(line_decoded_med)
@@ -550,8 +550,36 @@ class IVAE(MyDataset,IVAE_ARCH):
         with open('results_dict.pkl', 'wb') as f:
             pickle.dump(ff, f)
         return(ff)
-
 #############################################################  
+#############################################################  
+    def synthetic_single_group(self,cell_type_id=0,traversal_step=10,nr_of_synthetic=200):
+        
+        import random
+        ant_df=pd.DataFrame({'Y':self.labels1,'YY':self.labels2,'index':list(range(0, len(self.labels1)))})
+        start = list(ant_df.loc[ant_df['Y']==cell_type_id]['index'])
+        end = list(ant_df.loc[ant_df['Y']==cell_type_id]['index'])
+
+        print(len(healthy),len(cancer))
+        h_max=min(100,len(healthy))
+        c_max=min(100,len(cancer))
+        
+        line_decoded=np.zeros(shape=(traversal_step, self.df_XY.shape[1]-1,h_max*c_max))
+        index=0
+        
+        for h in random.sample(healthy, h_max):
+            for c in random.sample(cancer, c_max):
+                ss =self.traverse(number_of_images=traversal_step, start_id=h, end_id=c,model_name="supervised_")
+                line_decoded[:,:,index]=ss
+                index=index+1
+                if index==nr_of_synthetic:
+                    break
+
+        synthtic_data=line_decoded[:,:,0]
+        for i in range(1,index):
+            synthtic_data = np.concatenate(synthtic_data,line_decoded[:,:,i],axis=0)
+
+        return(synthtic_data)
+#############################################################
 #############################################################    
     def regression_analysis(self,means,labels):
       #means_all_test=torch.empty_like(means[0])
@@ -597,6 +625,7 @@ class IVAE(MyDataset,IVAE_ARCH):
         if projection == '2d':
             ax = plt.axes()
             sc=ax.scatter(EE[:,0], EE[:,1],s=size_dot,c=Y,marker=".",cmap='tab20')
+        
         elif projection == '3d':
             ax = plt.axes(projection='3d')
             sc=ax.scatter(EE[:,0], EE[:,1],EE[:,2],s=size_dot,c=Y,marker=".",cmap='tab20')
@@ -795,7 +824,7 @@ class IVAE(MyDataset,IVAE_ARCH):
       imageio.mimsave(file_path_root +indicator+ ".gif", images, fps=speed) #Creates gif out of list of images
 #############################################################  
 #############################################################   
-    def generate_synthetic_data(self,model,miu_last,y_last,number_of_additional_data):
+    def generate_synthetic_data(self,number_of_additional_data):
           import numpy as np
           number_of_images_per_traversal=20
         
@@ -805,7 +834,7 @@ class IVAE(MyDataset,IVAE_ARCH):
             m = np.random.choice(range(500), 2, replace=False) 
             start_id = m[0]
             end_id = m[1]
-            synthetic_data = self.generate_data_linear_from_a_to_b(model,miu_last,y_last,number_of_images_per_traversal,start_id,end_id,flat=True)
+            synthetic_data = self.generate_data_linear_from_a_to_b(self.model,self.miu_last,self.y_last,number_of_images_per_traversal,start_id,end_id,flat=True)
         
             if (i==0):
               synthetic_data_all=synthetic_data
@@ -901,6 +930,7 @@ class Utils():
     for i in range(11):
         pyplot.imshow(three[1]+(i)*delta, cmap=pyplot.get_cmap('gray'))
         pyplot.show()
+
  def linear_traverse_original_space(x0_png_address,x1_png_address,output_address,number_of_images=20):
      
      from PIL import Image
