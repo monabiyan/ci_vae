@@ -492,7 +492,7 @@ class IVAE(MyDataset,IVAE_ARCH):
           #return(test_tracker,test_BCE_tracker,test_KLD_tracker,test_CEP_tracker)
 #############################################################  
 #############################################################  
-    def traversal_single_group(self,cell_type_id):
+    def traversal_single_group(self,cell_type_id,traversal_step):
         ant_df=pd.DataFrame({'Y':self.labels1,'YY':self.labels2,'index':list(range(0, len(self.labels1)))})
         import random
         healthy = list(ant_df.loc[ant_df['YY']==0].loc[ant_df['Y']==cell_type_id]['index'])
@@ -502,7 +502,7 @@ class IVAE(MyDataset,IVAE_ARCH):
         print(len(healthy),len(cancer))
         h_max=min(100,len(healthy))
         c_max=min(100,len(cancer))
-        traversal_step=50
+        
         line_decoded=np.zeros(shape=(traversal_step, self.df_XY.shape[1]-1,h_max*c_max))
         index=0
         
@@ -536,7 +536,7 @@ class IVAE(MyDataset,IVAE_ARCH):
         #return(line_decoded)
 #############################################################  
 #############################################################
-    def traversal_all_groups(self):
+    def traversal_all_groups(self,traversal_step=50):
         ff=dict()
         ff['mean']=dict()
         ff['med']=dict()
@@ -544,7 +544,7 @@ class IVAE(MyDataset,IVAE_ARCH):
 
         for i in range(len(set(self.df_XY['Y']))):
             print(i)
-            ff['mean'][str(i)],ff['med'][str(i)],ff['std'][str(i)]=self.traversal_single_group(i)
+            ff['mean'][str(i)],ff['med'][str(i)],ff['std'][str(i)]=self.traversal_single_group(i,traversal_step)
 
         import pickle
         with open('results_dict.pkl', 'wb') as f:
