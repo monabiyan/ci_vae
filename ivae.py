@@ -492,7 +492,7 @@ class IVAE(MyDataset,IVAE_ARCH):
           #return(test_tracker,test_BCE_tracker,test_KLD_tracker,test_CEP_tracker)
 #############################################################  
 #############################################################  
-    def traversal_single_group(cell_type_id):
+    def traversal_single_group(self,cell_type_id):
         ant_df=pd.DataFrame({'Y':self.labels1,'YY':self.labels2,'index':list(range(0, len(self.labels1)))})
         import random
         healthy = list(ant_df.loc[ant_df['YY']==0].loc[ant_df['Y']==cell_type_id]['index'])
