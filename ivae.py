@@ -621,11 +621,12 @@ class IVAE(MyDataset,IVAE_ARCH):
       Y=Y[index_rand]
       Y = list(map(int, Y))
       E_TSNE = TSNE(n_components=3).fit_transform(X.cpu())
-      reducer = umap.UMAP(random_state=42,n_components=20)
+      reducer = umap.UMAP(random_state=42,n_components=X.cpu().shape[1])
+      print(X.cpu())
       E_UMAP = reducer.fit_transform(X.cpu())
       pca = PCA(n_components=3)
       E_PCA=pca.fit_transform(X.cpu())
-      return(E_TSNE,E_UMAP,E_PCA,Y)
+      return(E_TSNE,E_PCA,Y)
 #############################################################  
 #############################################################  
     def plot_lower_dimension(self,EE,Y,size_dot=1,projection='2d',save_str='myplot.pdf'):
