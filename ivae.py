@@ -626,18 +626,18 @@ class IVAE(MyDataset,IVAE_ARCH):
       E_UMAP = reducer.fit_transform(X.cpu())
       pca = PCA(n_components=3)
       E_PCA=pca.fit_transform(X.cpu())
-      return(E_TSNE,E_PCA,Y)
+      return(E_TSNE,E_UMAP,E_PCA,Y)
 #############################################################  
 #############################################################  
     def plot_lower_dimension(self,EE,Y,size_dot=1,projection='2d',save_str='myplot.pdf'):
       
         if projection == '2d':
             ax = plt.axes()
-            sc=ax.scatter(EE[:,0], EE[:,1],s=size_dot,c=Y,marker=".",cmap='tab20')
+            sc=ax.scatter(EE[:,0], EE[:,1],s=size_dot,c=Y,marker=".")
         
         elif projection == '3d':
             ax = plt.axes(projection='3d')
-            sc=ax.scatter(EE[:,0], EE[:,1],EE[:,2],s=size_dot,c=Y,marker=".",cmap='tab20')
+            sc=ax.scatter(EE[:,0], EE[:,1],EE[:,2],s=size_dot,c=Y,marker=".")
             # Hide grid lines
             ax.grid(False)
             # Hide axes ticks
