@@ -552,23 +552,31 @@ class IVAE(MyDataset,IVAE_ARCH):
         return(ff)
 #############################################################  
 #############################################################  
-    def synthetic_single_group(self,cell_type_id=0,traversal_step=10,nr_of_synthetic=200):
+    def synthetic_single_group(self,group_id=0,nr_of_synthetic=1000):
         
         import random
         ant_df=pd.DataFrame({'Y':self.labels1,'YY':self.labels2,'index':list(range(0, len(self.labels1)))})
-        start = list(ant_df.loc[ant_df['Y']==cell_type_id]['index'])
-        end = list(ant_df.loc[ant_df['Y']==cell_type_id]['index'])
+        start = list(ant_df.loc[ant_df['Y']==group_id]['index'])
+        end = list(ant_df.loc[ant_df['Y']==group_id]['index'])
 
         print(len(start),len(end))
-        h_max=min(100,len(start))
-        c_max=min(100,len(end))
+
+        nr_sampled=10
+
+        h_max=min(nr_sampled,len(start))
+        c_max=min(nr_sampled,len(end))
         
-        line_decoded=np.zeros(shape=(traversal_step, self.df_XY.shape[1]-1,h_max*c_max))
+        traversal_step = int(nr_of_synthetic/(nr_sampled**2))
+        if traversal_step<5:
+            traversal_step = 5
+
+
+        line_decoded=np.zeros(shape=(traversal_step, self.df_XY.shape[1]-1, h_max*c_max))
         index=0
         
         for h in random.sample(start, h_max):
             for c in random.sample(end, c_max):
-                ss =self.traverse(number_of_images=traversal_step, start_id=h, end_id=c,model_name="supervised_")
+                ss =self.traverse(number_of_images=traversal_step, start_id=h, end_id=c, model_name="supervised_")
                 line_decoded[:,:,index]=ss
                 index=index+1
                 if index==nr_of_synthetic:
