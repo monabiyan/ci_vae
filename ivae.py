@@ -19,7 +19,7 @@ import pandas as pd
 from torch.utils.data import Dataset
 import torch
 import random
-np.random.seed(0)
+
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -214,7 +214,9 @@ class IVAE_ARCH(nn.Module):
     
 
 class IVAE(MyDataset,IVAE_ARCH):
-    def __init__(self,df_XY,latent_size=20,reconst_coef=100000,kl_coef=0.001*512,classifier_coef=1000,test_ratio=1):
+    def __init__(self,df_XY,latent_size=20,reconst_coef=100000,kl_coef=0.001*512,classifier_coef=1000,test_ratio=1,random_seed=0):
+        ##########
+        self.random_seed=random_seed
         ##########
         self.reconst_coef = reconst_coef
         self.kl_coef = kl_coef
@@ -256,7 +258,7 @@ class IVAE(MyDataset,IVAE_ARCH):
 #############################################################  
 #############################################################     
     def model_load(self,address):
-        random.seed(0)
+        np.random.seed(self.random_seed)
         self.model_initialiaze()
         self.model.load_state_dict(torch.load(address))
 #############################################################  
@@ -305,14 +307,14 @@ class IVAE(MyDataset,IVAE_ARCH):
             df_XY_train = self.df_XY
             df_XY_test = self.df_XY
         else:   
-            self.df_XY = self.df_XY.sample(frac = 1,random_state=0)
+            self.df_XY = self.df_XY.sample(frac = 1,random_state=self.random_seed)
             
-            df_XY_train, df_XY_test = train_test_split(self.df_XY, test_size=test_ratio, random_state=1234)
+            df_XY_train, df_XY_test = train_test_split(self.df_XY, test_size=test_ratio, random_state=self.random_seed)
         
         data_train = MyDataset(df=df_XY_train,y_label=["Y"])
         data_test = MyDataset(df=df_XY_test,y_label=["Y"])
         import random
-        random.seed(0)
+        random.seed(self.random_seed)
         self.BATCH_SIZE=512
         trainloader = torch.utils.data.DataLoader(dataset = data_train,
                                                    batch_size = self.BATCH_SIZE,
@@ -389,8 +391,7 @@ class IVAE(MyDataset,IVAE_ARCH):
       test_KLD_loss=0
       test_CEP_loss=0
       test_total_loss = 0
-      import random
-      random.seed(0)
+      np.random.seed(self.random_seed)
       with torch.no_grad():
         model.eval()
         for x, y in self.testloader:
