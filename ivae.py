@@ -19,7 +19,7 @@ import pandas as pd
 from torch.utils.data import Dataset
 import torch
 import random
-random.seed(0)
+np.random.seed(0)
 
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
