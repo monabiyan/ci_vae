@@ -262,9 +262,14 @@ class IVAE(MyDataset,IVAE_ARCH):
 #############################################################     
     def model_load(self,address):
         np.random.seed(self.random_seed)
-        #self.model_initialiaze()
+
+        self.model_initialiaze()
+        checkpoint = torch.load(address)
+        
+        self.model.load_state_dict(checkpoint["model_state_dict"])
+
         #self.model.load_state_dict(torch.load(address))
-        self.model = torch.load(address)
+        #self.model = torch.load(address)
         print("model loaded")
         return()
 #############################################################  
