@@ -266,7 +266,7 @@ class IVAE(MyDataset,IVAE_ARCH):
         self.model_initialiaze()
         checkpoint = torch.load(address)
         
-        self.model.load_state_dict(checkpoint["model_state_dict"])
+        self.model=self.model.load_state_dict(checkpoint["model_state_dict"])
 
         #self.model.load_state_dict(torch.load(address))
         #self.model = torch.load(address)
