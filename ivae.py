@@ -254,24 +254,13 @@ class IVAE(MyDataset,IVAE_ARCH):
 #############################################################  
 #############################################################          
     def model_save(self,address):
-        torch.save({"model_state_dict":self.model.state_dict(),
-            "optimizer_state_dict":self.optimizer.state_dict()},address)
-        print("model saved")
-        return()
+        torch.save(self.model.state_dict(),address)
 #############################################################  
 #############################################################     
     def model_load(self,address):
         np.random.seed(self.random_seed)
-
         self.model_initialiaze()
-        checkpoint = torch.load(address)
-        
-        self.model=self.model.load_state_dict(checkpoint["model_state_dict"])
-
-        #self.model.load_state_dict(torch.load(address))
-        #self.model = torch.load(address)
-        print("model loaded")
-        return()
+        self.model.load_state_dict(torch.load(address))
 #############################################################  
 #############################################################  
     def save_residuals(self,address='residuals.pkl'):
