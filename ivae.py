@@ -501,9 +501,13 @@ class IVAE(MyDataset,IVAE_ARCH):
         #healthy = [i for i, x in enumerate(YY) if x == 0]
         #cancer = [i for i, x in enumerate(YY) if x == 10]
         print(len(healthy),len(cancer))
-        h_max=min(100,len(healthy))
-        c_max=min(100,len(cancer))
         
+        #h_max=min(100,len(healthy))
+        #c_max=min(100,len(cancer))
+        
+        h_max=len(healthy)
+        c_max=len(cancer)
+
         line_decoded=np.zeros(shape=(traversal_step, self.df_XY.shape[1]-1,h_max*c_max))
         index=0
         
