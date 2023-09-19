@@ -20,246 +20,165 @@ from torch.utils.data import Dataset
 import torch
 import random
 
-
-
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
+import torch
+from torch.utils.data import Dataset
+import torch.nn as nn
+
+import torch
+from torch.utils.data import Dataset
+import torch.nn as nn
+
+
 class MyDataset(Dataset):
-    def __init__(self,df,y_label=["Y"] ,mode = 'train'):
-          self.mode = mode    
-          if self.mode == 'train':
-              self.oup = df.loc[:, y_label].values
-              self.inp  = df.drop(columns=y_label)
-              self.x_features=self.inp.columns.tolist()
-              self.inp = self.inp.values      # df.values == Return a Numpy representation of the DataFrame
-          else:
-              self.inp = df.values
-              self.x_features = self.inp.columns.tolist()
-    def __len__(self):
-        return (self.inp).shape[0]
-    def __dim__(self):
-        return (self.inp).shape[1]
-    def __getitem__(self, idx):
-        if self.mode == 'train':
-            inpt  = torch.Tensor(self.inp[idx])
-            oupt  = torch.Tensor(self.oup[idx])
-            return (inpt,oupt)
+    def __init__(self, df, y_label=["Y"], mode='train'):
+        self.mode = mode
+        
+        if 'train' == self.mode:
+            if y_label[0] not in df.columns:
+                raise ValueError(f"Column {y_label[0]} not found in the dataframe.")
+            self.oup = df.loc[:, y_label].values
+            self.inp = df.drop(columns=y_label)
         else:
-            inpt = torch.Tensor(self.inp[idx])
+            self.inp = df
+
+        self.x_features = self.inp.columns.tolist()
+        self.inp = self.inp.values
+
+    def __len__(self):
+        return self.inp.shape[0]
+
+    def __dim__(self):
+        return self.inp.shape[1]
+
+    def __getitem__(self, idx):
+        inpt = torch.Tensor(self.inp[idx]).to(device)
+        if 'train' == self.mode:
+            oupt = torch.Tensor(self.oup[idx]).to(device)
+            return inpt, oupt
+        else:
             return inpt
 
-class IVAE_ARCH(nn.Module):
-    def __init__(self,input_size,n_classes,latent_size,dropout_rate=0.05):
-        super().__init__()
-        self.latent_size=latent_size
-        self.dropout_rate = dropout_rate
-        self.input_size=input_size
-        medium_layer=int((self.input_size+latent_size)/2)
-        #second_layer_size = int((self.input_size+latent_size ** 2)/2)
-        medium_layer2 = int(0.8*self.input_size)
-        medium_layer3 = int(medium_layer/2)
+def block(in_features, out_features, dropout_rate, momentum):
+    return nn.Sequential(
+        nn.Linear(in_features, out_features),
+        nn.ReLU(),
+        nn.BatchNorm1d(out_features, momentum=momentum),
+        nn.Dropout(p=dropout_rate)
+    )
 
-        
+class IVAE_ARCH(nn.Module):
+    def __init__(self, input_size, n_classes, latent_size, dropout_rate=0.05, momentum=0.2):
+        super().__init__()
+        self.latent_size = latent_size
+        self.input_size = input_size
+
         medium_layer2 = 20
         medium_layer = 20
-        medium_layer3= 10
-        momentum=0.2
-
+        medium_layer3 = 10
         
+        layers = [
+            block(self.input_size, medium_layer2, dropout_rate, momentum),
+            block(medium_layer2, medium_layer, dropout_rate, momentum)
+        ]
+        for _ in range(6):
+            layers.append(block(medium_layer, medium_layer, dropout_rate, momentum))
+        layers.append(block(medium_layer, medium_layer3, dropout_rate, momentum))
+        layers.append(nn.Linear(medium_layer3, latent_size * 2))
+        self.encoder = nn.Sequential(*layers)
 
-        self.encoder = nn.Sequential(
-            nn.Linear(self.input_size, medium_layer2),
-            nn.ReLU(),
-            nn.BatchNorm1d(medium_layer2,momentum=momentum),
-            nn.Dropout(p=dropout_rate),
-            ##################
-            nn.Linear(medium_layer2, medium_layer),
-            nn.ReLU(),
-            nn.BatchNorm1d(medium_layer,momentum=momentum),
-            nn.Dropout(p=dropout_rate),
-            ##################
-            nn.Linear(medium_layer , medium_layer),
-            nn.ReLU(),
-            nn.BatchNorm1d(medium_layer,momentum=momentum),
-            nn.Dropout(p=dropout_rate),
-            ##################
-            nn.Linear(medium_layer , medium_layer),
-            nn.ReLU(),
-            nn.BatchNorm1d(medium_layer,momentum=momentum),
-            nn.Dropout(p=dropout_rate),
-            ##################
-            nn.Linear(medium_layer , medium_layer),
-            nn.ReLU(),
-            nn.BatchNorm1d(medium_layer,momentum=momentum),
-            nn.Dropout(p=dropout_rate),
-            ##################
-            nn.Linear(medium_layer , medium_layer),
-            nn.ReLU(),
-            nn.BatchNorm1d(medium_layer,momentum=momentum),
-            nn.Dropout(p=dropout_rate),
-            ##################
-            nn.Linear(medium_layer , medium_layer),
-            nn.ReLU(),
-            nn.BatchNorm1d(medium_layer,momentum=momentum),
-            nn.Dropout(p=dropout_rate),
-            ##################
-            nn.Linear(medium_layer , medium_layer),
-            nn.ReLU(),
-            nn.BatchNorm1d(medium_layer,momentum=momentum),
-            nn.Dropout(p=dropout_rate),
-            ##################            
-            nn.Linear(medium_layer , medium_layer3),
-            nn.ReLU(),
-            nn.BatchNorm1d(medium_layer3,momentum=momentum),
-            nn.Dropout(p=dropout_rate),
-            ##################
-            nn.Linear(medium_layer3, latent_size * 2)
-        )
+        layers = [
+            block(latent_size, medium_layer3, dropout_rate, momentum),
+            block(medium_layer3, medium_layer, dropout_rate, momentum)
+        ]
+        for _ in range(6):
+            layers.append(block(medium_layer, medium_layer, dropout_rate, momentum))
+        layers.extend([
+            block(medium_layer, medium_layer2, dropout_rate, momentum),
+            nn.Linear(medium_layer2, input_size)
+        ])
+        self.decoder = nn.Sequential(*layers)
 
-        self.decoder = nn.Sequential(
-            nn.Linear(latent_size, medium_layer3),
-            nn.ReLU(),
-            nn.BatchNorm1d(medium_layer3,momentum=momentum),
-            nn.Dropout(p=dropout_rate),
-            ##################
-            nn.Linear(medium_layer3, medium_layer),
-            nn.ReLU(),
-            nn.BatchNorm1d(medium_layer,momentum=momentum),
-            nn.Dropout(p=dropout_rate),
-            ##################
-            nn.Linear(medium_layer,medium_layer),
-            nn.ReLU(),
-            nn.BatchNorm1d(medium_layer,momentum=momentum),
-            nn.Dropout(p=dropout_rate),
-            ##################
-            nn.Linear(medium_layer,medium_layer),
-            nn.ReLU(),
-            nn.BatchNorm1d(medium_layer,momentum=momentum),
-            nn.Dropout(p=dropout_rate),
-            ##################
-            nn.Linear(medium_layer,medium_layer),
-            nn.ReLU(),
-            nn.BatchNorm1d(medium_layer,momentum=momentum),
-            nn.Dropout(p=dropout_rate),
-            ##################
-            nn.Linear(medium_layer,medium_layer),
-            nn.ReLU(),
-            nn.BatchNorm1d(medium_layer,momentum=momentum),
-            nn.Dropout(p=dropout_rate),
-            ##################
-            nn.Linear(medium_layer,medium_layer),
-            nn.ReLU(),
-            nn.BatchNorm1d(medium_layer,momentum=momentum),
-            nn.Dropout(p=dropout_rate),
-            ##################     
-            nn.Linear(medium_layer,medium_layer),
-            nn.ReLU(),
-            nn.BatchNorm1d(medium_layer,momentum=momentum),
-            nn.Dropout(p=dropout_rate),
-            ##################     
-            nn.Linear(medium_layer,medium_layer2),
-            nn.ReLU(),
-            #
-            nn.BatchNorm1d(medium_layer2,momentum=momentum),
-            nn.Dropout(p=dropout_rate),
-            ##################      
-            nn.Linear(medium_layer2,input_size)
-            ##################                
-        )
-        
-        self.classifier = nn.Sequential (
+        self.classifier = nn.Sequential(
             nn.Linear(latent_size, n_classes),
-            #nn.BatchNorm1d(10),
-            nn.Dropout(p = 0.80)
-            #nn.Softmax()
+            nn.Dropout(p=0.80)
         )
+
     def reparameterise(self, mu, logvar):
-        #if self.training:
-        if True:
-            std = torch.exp(logvar / 2)+0.0000001
+        if self.training:
+            std = torch.exp(logvar / 2) + 1e-7
             q = torch.distributions.Normal(mu, std)
             z = q.rsample()
-            #std = logvar.mul(0.5).exp_()
-            #eps = std.data.new(std.size()).normal_()
             return z
-        else:
-            return mu
+        return mu
 
     def encode(self, x):
-      mu_logvar = self.encoder(x.view(-1, self.input_size)).view(-1, 2, self.latent_size)
-      mu = mu_logvar[:, 0, :]
-      logvar = mu_logvar[:, 1, :]
-      return mu, logvar
+        mu_logvar = self.encoder(x.view(-1, self.input_size)).view(-1, 2, self.latent_size)
+        mu = mu_logvar[:, 0, :]
+        logvar = mu_logvar[:, 1, :]
+        return mu, logvar
 
     def decode(self, z):
-      return self.decoder(z)
+        return self.decoder(z)
 
     def sample(self, n_samples):
-      z = torch.randn((n_samples, self.latent_size)).to(device)
-      return self.decode(z)
+        z = torch.randn((n_samples, self.latent_size), device=device)
+        return self.decode(z)
 
     def forward(self, x):
         mu, logvar = self.encode(x)
         z = self.reparameterise(mu, logvar)
-        y_hat=self.classifier(z)
+        y_hat = self.classifier(z)
         x_hat = self.decode(z)
-        return x_hat,y_hat, mu, logvar, z
+        return x_hat, y_hat, mu, logvar, z
     
     def decoding_from_latent(self, mu, logvar):
         z = self.reparameterise(mu, logvar)
         x_hat = self.decode(z)
         return x_hat
-
-    
     
 
-class IVAE(MyDataset,IVAE_ARCH):
-    def __init__(self,df_XY,latent_size=20,reconst_coef=100000,kl_coef=0.001*512,classifier_coef=1000,test_ratio=1,random_seed=0):
-        ##########
-        self.random_seed=random_seed
-        ##########
+
+class IVAE(MyDataset, IVAE_ARCH):
+    def __init__(self, df_XY, latent_size=20, reconst_coef=100000, kl_coef=0.001*512, classifier_coef=1000, test_ratio=1, random_seed=0, batch_size=512):
+        self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+        self.random_seed = random_seed
         self.reconst_coef = reconst_coef
         self.kl_coef = kl_coef
         self.classifier_coef = classifier_coef
-        ##########
-        self.labels1=df_XY['Y'].tolist()
-        self.labels2=df_XY['YY'].tolist()
-        df_XY['Y']=self.labels1
-        df_XY=df_XY.drop(columns=['YY'])
-        self.df_XY=df_XY
-        #self.df_XY = self.MNIST_data()
-        ##########
-        self.latent_size=latent_size
-        #obj.organize_data(df_XY)
+        
+        self.mae_loss = nn.L1Loss().to(self.device)
+        self.crs_entrpy = nn.CrossEntropyLoss().to(self.device)
+
+        self.labels1 = df_XY['Y'].tolist()
+        df_XY['Y'] = self.labels1
+        df_XY = df_XY.drop(columns=['YY'])
+        self.df_XY = df_XY
+        
+        self.latent_size = latent_size
         self.input_size = self.df_XY.shape[1]-1
 
-        IVAE_ARCH.__init__(self,
-            input_size=self.input_size,
-            n_classes=len(set(list(self.df_XY['Y']))),
-            latent_size=self.latent_size)
-        
-        MyDataset.__init__(self,df=self.df_XY)
+        IVAE_ARCH.__init__(self, input_size=self.input_size, n_classes=len(set(self.df_XY['Y'])), latent_size=self.latent_size)
+        MyDataset.__init__(self, df=self.df_XY)
+
+        self.BATCH_SIZE = batch_size
         self.organize_data(test_ratio)
-#############################################################  
-#############################################################  
-    def model_initialiaze(self):
-        self.model=IVAE_ARCH(input_size=self.input_size,
-            n_classes=len(set(list(self.df_XY['Y']))),
-            latent_size=self.latent_size).to(device)
-        self.train_tracker=[]
-        self.test_tracker=[]
-        self.test_BCE_tracker=[]
-        self.test_KLD_tracker=[]
-        self.test_CEP_tracker=[]
-#############################################################  
-#############################################################          
-    def model_save(self,address):
-        torch.save(self.model.state_dict(),address)
-#############################################################  
-#############################################################     
-    def model_load(self,address):
+
+    def model_initialize(self):
+        self.model = IVAE_ARCH(input_size=self.input_size, n_classes=len(set(self.df_XY['Y'])), latent_size=self.latent_size).to(self.device)
+        self.train_tracker = []
+        self.test_tracker = []
+        self.test_BCE_tracker = []
+        self.test_KLD_tracker = []
+        self.test_CEP_tracker = []
+
+    def model_save(self, address):
+        torch.save(self.model.state_dict(), address)
+
+    def model_load(self, address):
         np.random.seed(self.random_seed)
-        self.model_initialiaze()
+        self.model_initialize()
         self.model.load_state_dict(torch.load(address))
 #############################################################  
 #############################################################  
@@ -421,35 +340,14 @@ class IVAE(MyDataset,IVAE_ARCH):
       return test_BCE_loss, test_KLD_loss, test_CEP_loss, test_total_loss, means, logvars, true_Y, true_X, pred_Y, pred_X,zs
 #############################################################  
 #############################################################      
-    def loss_function(self,x_hat, x,y_hat,y, mu, logvar):
-        # reconstruction loss (pushing the points apart)
-        #BCE = nn.functional.binary_cross_entropy(x_hat, x.view(-1, input_size), reduction='sum')
-        #mse_loss = nn.MSELoss()
-        mae_loss = nn.L1Loss()
-        crs_entrpy = nn.CrossEntropyLoss()
-        
-        #BCE = nn.functional.binary_cross_entropy_with_logits(x_hat, x.view(-1, self.input_size))
-        BCE = mae_loss(x_hat, x.view(-1, self.input_size))
-        #BCE = F.binary_cross_entropy(x_hat, x.view(-1, self.input_size))
-        CEP = crs_entrpy(y_hat.to(device),y.to(device))
-        # KL divergence loss (the relative entropy between two distributions a multivariate gaussian and a normal)
-        # (enforce a radius of 1 in each direction + pushing the means towards zero)
-        #KLD = 0.5 * torch.sum(logvar.exp() - logvar - 1 + mu.pow(2))
-        #KLD=torch.mean(torch.abs(KLD))
+    def loss_function(self, x_hat, x, y_hat, y, mu, logvar):
+        BCE = self.mae_loss(x_hat, x.view(-1, self.input_size))
+        CEP = self.crs_entrpy(y_hat.to(self.device), y.to(self.device))
         KLD = -0.5 * torch.sum(1 + logvar - mu.pow(2) - logvar.exp())
         KLD = KLD/self.BATCH_SIZE
-        #KLD2= torch.mean(-0.5 * torch.sum(1 + logvar - mu ** 2 - logvar.exp(), dim = 1), dim = 0)
-        #print(KLD)
-
-        #BCE = BCE*reconst_coef
-        #KLD = KLD * kl_coef
-        #CEP = CEP*classifier_coef
-        
-        #Tot_Loss = BCE + KLD
         
         Tot_Loss = BCE * self.reconst_coef + KLD * self.kl_coef + CEP * self.classifier_coef
-        return BCE * self.reconst_coef, KLD * self.kl_coef, CEP * self.classifier_coef, Tot_Loss  # we can use a beta parameter here (BCE + beta * KLD)
-#############################################################  
+        return BCE * self.reconst_coef, KLD * self.kl_coef, CEP * self.classifier_coef, Tot_Loss#############################################################  
 #############################################################  
     def reconstruct_all_data(self,X_df):
         self.model.eval()
