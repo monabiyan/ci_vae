@@ -19,6 +19,9 @@ import pandas as pd
 from torch.utils.data import Dataset
 import torch
 import random
+import concurrent.futures
+import pickle
+from itertools import product
 
 device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
@@ -142,6 +145,15 @@ class IVAE_ARCH(nn.Module):
 
 class IVAE(MyDataset, IVAE_ARCH):
     def __init__(self, df_XY, latent_size=20, reconst_coef=100000, kl_coef=0.001*512, classifier_coef=1000, test_ratio=1, random_seed=0, batch_size=512):
+
+        # Get dimensions from the dataset
+        dataset_dim = df_XY.shape[1] - 1  # assuming Y is a single column
+        n_classes = len(df_XY["Y"].unique())  # assuming Y is the column name of classes
+        
+        # Initialize the base classes
+        MyDataset.__init__(self, df_XY)
+        IVAE_ARCH.__init__(self, dataset_dim, n_classes, latent_size)
+
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
         self.random_seed = random_seed
         self.reconst_coef = reconst_coef
@@ -152,6 +164,7 @@ class IVAE(MyDataset, IVAE_ARCH):
         self.crs_entrpy = nn.CrossEntropyLoss().to(self.device)
 
         self.labels1 = df_XY['Y'].tolist()
+        self.labels2 = df_XY['YY'].tolist()
         df_XY['Y'] = self.labels1
         df_XY = df_XY.drop(columns=['YY'])
         self.df_XY = df_XY
@@ -159,8 +172,7 @@ class IVAE(MyDataset, IVAE_ARCH):
         self.latent_size = latent_size
         self.input_size = self.df_XY.shape[1]-1
 
-        IVAE_ARCH.__init__(self, input_size=self.input_size, n_classes=len(set(self.df_XY['Y'])), latent_size=self.latent_size)
-        MyDataset.__init__(self, df=self.df_XY)
+
 
         self.BATCH_SIZE = batch_size
         self.organize_data(test_ratio)
@@ -357,9 +369,7 @@ class IVAE(MyDataset, IVAE_ARCH):
 #############################################################  
 #############################################################  
     def generate_test_results(self):
-      
       loss_scale_show=1
-    
       test_tracker=[]
       test_BCE_tracker=[]
       test_KLD_tracker=[]
@@ -391,68 +401,81 @@ class IVAE(MyDataset, IVAE_ARCH):
           #return(test_tracker,test_BCE_tracker,test_KLD_tracker,test_CEP_tracker)
 #############################################################  
 #############################################################  
-    def traversal_single_group(self,cell_type_id,traversal_step):
-        ant_df=pd.DataFrame({'Y':self.labels1,'YY':self.labels2,'index':list(range(0, len(self.labels1)))})
-        import random
-        healthy = list(ant_df.loc[ant_df['YY']==0].loc[ant_df['Y']==cell_type_id]['index'])
-        cancer = list(ant_df.loc[ant_df['YY']==1].loc[ant_df['Y']==cell_type_id]['index'])
-        #healthy = [i for i, x in enumerate(YY) if x == 0]
-        #cancer = [i for i, x in enumerate(YY) if x == 10]
-        print(len(healthy),len(cancer))
-        
-        #h_max=min(100,len(healthy))
-        #c_max=min(100,len(cancer))
-        
-        h_max=len(healthy)
-        c_max=len(cancer)
 
-        line_decoded=np.zeros(shape=(traversal_step, self.df_XY.shape[1]-1,h_max*c_max))
-        index=0
-        
-        for h in random.sample(healthy, h_max):
-            for c in random.sample(cancer, c_max):
-                #print((sc_df_filtered2.iloc[c,:-1]-sc_df_filtered2.iloc[h,:-1]).mean())
-                ss =self.traverse(number_of_images=traversal_step, start_id=h, end_id=c,model_name="supervised_")
-                #print(ss.shape)
-                #ss = ss/ss[0]
-                #print(ss)
-                #line_decoded = np.add(line_decoded,ss)
-                line_decoded[:,:,index]=ss
-                index=index+1
-        #line_decoded = line_decoded/(50*50)
-        line_decoded_med = np.median(line_decoded, axis=2)
-        line_decoded_mean = np.mean(line_decoded, axis=2)
-        line_decoded_std = np.std(line_decoded, axis=2)
-        print(line_decoded_med)
-        
-        gg_med=pd.DataFrame(line_decoded_med)
-        gg_med.columns=self.df_XY.columns[0:-1]
-        
-        gg_mean=pd.DataFrame(line_decoded_mean)
-        gg_mean.columns=self.df_XY.columns[0:-1]
-        
-        gg_std=pd.DataFrame(line_decoded_std)
-        gg_std.columns=self.df_XY.columns[0:-1]
-        
-        #gg= gg.div(gg.iloc[0])
-        return(gg_med,gg_mean,gg_std)
-        #return(line_decoded)
 #############################################################  
-#############################################################
-    def traversal_all_groups(self,traversal_step=50):
-        ff=dict()
-        ff['mean']=dict()
-        ff['med']=dict()
-        ff['std']=dict()
+#############################################################  
+    def generate_data_linear_from_a_to_b(self, model, miu_last, y_last, number_of_images, start_id, end_id, flat=True):
+        model.eval()
+        with torch.no_grad():
+            x0 = miu_last[start_id]
+            x1 = miu_last[end_id]
+            line = self.sample_data_on_a_line(x0, x1, number_of_images).to(device)
+            decoded_tensor = model.decoder(line)
 
-        for i in range(len(set(self.df_XY['Y']))):
-            print(i)
-            ff['mean'][str(i)],ff['med'][str(i)],ff['std'][str(i)]=self.traversal_single_group(i,traversal_step)
+            if flat:
+                return decoded_tensor.cpu().numpy()
+            return np.fliplr(decoded_tensor.cpu().numpy().reshape(number_of_images, 28, 28) * 256)
+#############################################################  
+#############################################################  
+    def traverse(self, number_of_images, start_id, end_id, file_path_root="traverse", model_name="supervised_", flat=True):
+        line_decoded = self.generate_data_linear_from_a_to_b(self.model, self.zs, self.y_last, number_of_images, start_id, end_id, flat)
+        if not flat:
+            indicator = f"{model_name}_{start_id}_{end_id}"
+            self.save_GIF(line_decoded, file_path_root, indicator)
+        return line_decoded
+#############################################################  
+#############################################################  
+    def traversal_single_group(self, cell_type_id, traversal_step):
+        ant_df = pd.DataFrame({
+            'Y': self.labels1,
+            'YY': self.labels2,
+            'index': list(range(len(self.labels1)))
+        })
+        healthy_indices = ant_df.query('YY == 0 & Y == @cell_type_id')['index'].tolist()
+        cancer_indices = ant_df.query('YY == 1 & Y == @cell_type_id')['index'].tolist()
 
-        import pickle
+        sample_size_h = min(traversal_step, len(healthy_indices))
+        sample_size_c = min(traversal_step, len(cancer_indices))
+
+        samples_h = random.sample(healthy_indices, sample_size_h)
+        samples_c = random.sample(cancer_indices, sample_size_c)
+
+        result_shape = (traversal_step, self.df_XY.shape[1] - 1, sample_size_h * sample_size_c)
+        line_decoded_arr = np.zeros(result_shape)
+
+        for index, (h, c) in enumerate(product(samples_h, samples_c)):
+            single_traverse = self.traverse(traversal_step, h, c, model_name="supervised_")
+            line_decoded_arr[:, :, index] = single_traverse
+
+        # Compute statistics across the third axis
+        mean_arr = np.mean(line_decoded_arr, axis=2)
+        med_arr = np.median(line_decoded_arr, axis=2)
+        std_arr = np.std(line_decoded_arr, axis=2)
+
+        return (
+            pd.DataFrame(med_arr, columns=self.df_XY.columns[:-1]),
+            pd.DataFrame(mean_arr, columns=self.df_XY.columns[:-1]),
+            pd.DataFrame(std_arr, columns=self.df_XY.columns[:-1])
+        )
+#############################################################  
+#############################################################  
+    def traversal_all_groups(self, traversal_step=50):
+        results = {
+            'mean': {},
+            'med': {},
+            'std': {}
+        }
+        for cell_type_id in set(self.df_XY['Y']):
+            med_df, mean_df, std_df = self.traversal_single_group(cell_type_id, traversal_step)
+            results['mean'][str(cell_type_id)] = mean_df
+            results['med'][str(cell_type_id)] = med_df
+            results['std'][str(cell_type_id)] = std_df
+
         with open('results_dict.pkl', 'wb') as f:
-            pickle.dump(ff, f)
-        return(ff)
+            pickle.dump(results, f)
+
+        return results
+
 #############################################################  
 #############################################################  
     def synthetic_single_group(self,group_id=0,nr_of_synthetic=1000):
@@ -695,17 +718,7 @@ class IVAE(MyDataset, IVAE_ARCH):
       return(line)
 #############################################################  
 #############################################################  
-    def generate_data_linear_from_a_to_b(self,model,miu_last,y_last,number_of_images,start_id,end_id,flat=False):
-      model.eval()
-      with torch.no_grad():
-        x0=miu_last[start_id]
-        x1=miu_last[end_id]
-        line = self.sample_data_on_a_line(x0,x1,number_of_images).to(device)
-        if (flat):
-          line_decoded = (((model.decoder(line).cpu().detach().numpy())))
-        else:
-          line_decoded = np.fliplr(((model.decoder(line).cpu().detach().numpy().reshape(number_of_images,28,28)*256)))
-      return(line_decoded)
+
 #############################################################  
 #############################################################  
     def save_GIF(self,decoded_objects,file_path_root,indicator,speed=5):
@@ -757,13 +770,7 @@ class IVAE(MyDataset, IVAE_ARCH):
           #return(synthetic_data)
 #############################################################  
 #############################################################  
-    def traverse(self,number_of_images,start_id,end_id,file_path_root="traverse",model_name="supervised_",flat=True):
-        line_decoded = self.generate_data_linear_from_a_to_b(self.model,self.zs,self.y_last,number_of_images,start_id,end_id,flat=flat)
-        decoded_objects=line_decoded
-        indicator = model_name+"_"+str(start_id)+"_"+str(end_id)
-        if (flat==False):
-            self.save_GIF(decoded_objects,file_path_root,indicator)
-        return(line_decoded)
+
 #############################################################  
 #############################################################  
     def traverse_multiple(self,number_class,number_of_images,start_id,end_id,file_path_root="multiple_traverse"):
