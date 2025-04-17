@@ -80,6 +80,15 @@ class IVAE_ARCH(nn.Module):
         medium_layer2 = 20
         medium_layer = 20
         medium_layer3 = 10
+
+        '''  # in case the goal is not to change the dimension (for example on foundation models)
+        self.input_size = input_size
+        self.latent_size = input_size
+
+        medium_layer2 = input_size
+        medium_layer = input_size
+        medium_layer3 = input_size
+        '''
         
         layers = [
             block(self.input_size, medium_layer2, dropout_rate, momentum),
