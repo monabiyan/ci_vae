@@ -534,54 +534,75 @@ class IVAE(MyDataset, IVAE_ARCH):
       print(reg.score(means_all_test, labels_all_test))
 #############################################################  
 #############################################################  
-    def calculate_lower_dimensions(self,miu_last,y_last,N=1000):
-      import random
-      index_rand=random.sample(range(1, miu_last.shape[0]), N)
-      import umap.umap_ as umap
-      from sklearn.manifold import TSNE
-      from sklearn.decomposition import PCA
-      #X=x_last
-      X = miu_last
-      Y = y_last
-      X=X[index_rand,]
-      Y=Y[index_rand]
-      Y = list(map(int, Y))
-      E_TSNE = TSNE(n_components=3).fit_transform(X.cpu())
-      reducer = umap.UMAP(random_state=42,n_components=X.cpu().shape[1])
-      print(X.cpu())
-      E_UMAP = reducer.fit_transform(X.cpu())
-      pca = PCA(n_components=3)
-      E_PCA=pca.fit_transform(X.cpu())
-      return(E_TSNE,E_UMAP,E_PCA,Y)
+    def calculate_lower_dimensions(self, miu_last, y_last, N=100):
+        import random
+        import umap.umap_ as umap
+        from sklearn.manifold import TSNE
+        from sklearn.decomposition import PCA
+    
+        # Randomly sample N points
+        index_rand = random.sample(range(miu_last.shape[0]), N)
+        X = miu_last[index_rand]
+        Y = y_last[index_rand]
+        Y = list(map(int, Y))
+    
+        # Convert to NumPy if needed
+        X_cpu = X.cpu()
+    
+        # Apply TSNE
+        E_TSNE = TSNE(n_components=3, random_state=42).fit_transform(X_cpu)
+    
+        # Apply UMAP with reduced n_components
+        reducer = umap.UMAP(random_state=42, n_components=3)
+        E_UMAP = reducer.fit_transform(X_cpu)
+    
+        # Apply PCA
+        pca = PCA(n_components=3)
+        E_PCA = pca.fit_transform(X_cpu)
+    
+        return E_TSNE, E_UMAP, E_PCA, Y
 #############################################################  
 #############################################################  
-    def plot_lower_dimension(self,EE,Y,size_dot=1,projection='2d',save_str='myplot.pdf'):
-      
+    def plot_lower_dimension(self, EE, Y, size_dot=10, projection='2d', save_str='myplot.pdf'):
+        import matplotlib.pyplot as plt
+        from matplotlib.colors import ListedColormap
+    
+        # Define color map: blue for class 0, red for class 1
+        colors = ['blue', 'red']
+        cmap = ListedColormap(colors)
+        class_names = ['Class 0', 'Class 1']
+    
+        # Create figure
+        fig = plt.figure(figsize=(8, 6))
+    
         if projection == '2d':
             ax = plt.axes()
-            sc=ax.scatter(EE[:,0], EE[:,1],s=size_dot,c=Y,marker=".")
-        
+            sc = ax.scatter(EE[:, 0], EE[:, 1], s=size_dot, c=Y, cmap=cmap, marker='.', alpha=0.7)
+    
         elif projection == '3d':
             ax = plt.axes(projection='3d')
-            sc=ax.scatter(EE[:,0], EE[:,1],EE[:,2],s=size_dot,c=Y,marker=".")
-            # Hide grid lines
+            sc = ax.scatter(EE[:, 0], EE[:, 1], EE[:, 2], s=size_dot, c=Y, cmap=cmap, marker='.', alpha=0.7)
             ax.grid(False)
-            # Hide axes ticks
             ax.set_xticks([])
             ax.set_yticks([])
             ax.set_zticks([])
-
-        #legend = ax.legend(#handles=sc.legend_elements()[1],
-                          #title="class"
-                          #framealpha=0,
-                          #ncol=10
-                          #loc=2,
-                          #fontsize='xx-small'
-        #                   )
-        #ax.add_artist(legend)
-
-        ax.legend()
-        plt.savefig(save_str)
+    
+        # Create legend manually
+        from matplotlib.lines import Line2D
+        legend_elements = [
+            Line2D([0], [0], marker='o', color='w', label=class_names[0],
+                   markerfacecolor=colors[0], markersize=8),
+            Line2D([0], [0], marker='o', color='w', label=class_names[1],
+                   markerfacecolor=colors[1], markersize=8)
+        ]
+        ax.legend(handles=legend_elements, loc='upper right', title='Classes')
+    
+        # Add title
+        plot_name = save_str.split('.')[0]  # e.g., 'tsne3d'
+        ax.set_title(f'{plot_name.upper()} - {projection.upper()} Projection', fontsize=12)
+    
+        # Save and show
+        plt.savefig(save_str, bbox_inches='tight')
         plt.show()
 #############################################################  
 #############################################################        
